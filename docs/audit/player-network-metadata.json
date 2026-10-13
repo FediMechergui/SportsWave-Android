@@ -1,0 +1,388 @@
+[
+  {
+    "host": "todaystreams.cc",
+    "type": "Document",
+    "initiators": [],
+    "status": 200,
+    "mime": "text/html",
+    "cors": null,
+    "finished": true,
+    "encodedBytes": 2539
+  },
+  {
+    "host": "usrpubtrk.com",
+    "type": "Ping",
+    "initiators": [
+      "dlive.sx/stream-24.php"
+    ],
+    "status": 200,
+    "mime": "text/plain",
+    "cors": null,
+    "finished": true,
+    "encodedBytes": 0
+  },
+  {
+    "host": "usrpubtrk.com",
+    "type": "Ping",
+    "initiators": [
+      "dembed.st/daddy.php"
+    ],
+    "status": 200,
+    "mime": "text/plain",
+    "cors": null,
+    "finished": true,
+    "encodedBytes": 0
+  },
+  {
+    "host": "acscdn.com",
+    "type": "Script",
+    "initiators": [],
+    "status": 200,
+    "mime": "text/plain",
+    "cors": null,
+    "finished": true,
+    "encodedBytes": 0
+  },
+  {
+    "host": "gc.zgo.at",
+    "type": "Script",
+    "initiators": [],
+    "status": 200,
+    "mime": "text/plain",
+    "cors": null,
+    "finished": true,
+    "encodedBytes": 0
+  },
+  {
+    "host": "www.googletagmanager.com",
+    "type": "Script",
+    "initiators": [],
+    "status": 200,
+    "mime": "text/plain",
+    "cors": null,
+    "finished": true,
+    "encodedBytes": 0
+  },
+  {
+    "host": "static.cloudflareinsights.com",
+    "type": "Script",
+    "initiators": [],
+    "error": "net::ERR_FAILED",
+    "corsError": "MissingAllowOriginHeader"
+  },
+  {
+    "host": "dlive.sx",
+    "type": "Document",
+    "initiators": [],
+    "status": 200,
+    "mime": "text/html",
+    "cors": null,
+    "finished": true,
+    "encodedBytes": 169731
+  },
+  {
+    "host": "s10.histats.com",
+    "type": "Script",
+    "initiators": [
+      "dlive.sx/stream-24.php"
+    ],
+    "status": 200,
+    "mime": "text/plain",
+    "cors": null,
+    "finished": true,
+    "encodedBytes": 0
+  },
+  {
+    "host": "www.xadsmart.com",
+    "type": "Script",
+    "initiators": [
+      "dlive.sx/stream-24.php"
+    ],
+    "error": "net::ERR_FAILED",
+    "corsError": "MissingAllowOriginHeader"
+  },
+  {
+    "host": "pl29569919.profitableratecpmnetwork.com",
+    "type": "Script",
+    "initiators": [],
+    "status": 200,
+    "mime": "text/plain",
+    "cors": null,
+    "finished": true,
+    "encodedBytes": 0
+  },
+  {
+    "host": "reviled.thirstacock.com",
+    "type": "Script",
+    "initiators": [],
+    "status": 200,
+    "mime": "text/plain",
+    "cors": null,
+    "finished": true,
+    "encodedBytes": 0
+  },
+  {
+    "host": "hv.briguefidibus.com",
+    "type": "Script",
+    "initiators": [],
+    "status": 200,
+    "mime": "text/plain",
+    "cors": null,
+    "finished": true,
+    "encodedBytes": 0
+  },
+  {
+    "host": "",
+    "type": "Script",
+    "initiators": []
+  },
+  {
+    "host": "d11enq2rymy0yl.cloudfront.net",
+    "type": "Script",
+    "initiators": [
+      "dlive.sx/stream-24.php"
+    ],
+    "error": "net::ERR_FAILED",
+    "corsError": "MissingAllowOriginHeader"
+  },
+  {
+    "host": "dembed.st",
+    "type": "Document",
+    "initiators": [],
+    "status": 200,
+    "mime": "text/html",
+    "cors": null,
+    "finished": true,
+    "encodedBytes": 177987
+  },
+  {
+    "host": "llvpn.com",
+    "type": "Script",
+    "initiators": [
+      "dlive.sx/stream-24.php"
+    ],
+    "status": 200,
+    "mime": "text/plain",
+    "cors": null,
+    "finished": true,
+    "encodedBytes": 0
+  },
+  {
+    "host": "www.hhxwtohhre.com",
+    "type": "Script",
+    "initiators": [
+      "dlive.sx/stream-24.php"
+    ],
+    "error": "net::ERR_FAILED",
+    "corsError": "MissingAllowOriginHeader"
+  },
+  {
+    "host": "www.elbvlyqj.com",
+    "type": "Script",
+    "initiators": [
+      "dlive.sx/stream-24.php"
+    ],
+    "error": "net::ERR_FAILED",
+    "corsError": "MissingAllowOriginHeader"
+  },
+  {
+    "host": "adexchangerapid.com",
+    "type": "Fetch",
+    "initiators": [
+      "dlive.sx/stream-24.php"
+    ],
+    "error": "net::ERR_FAILED",
+    "corsError": "MissingAllowOriginHeader"
+  },
+  {
+    "host": "ntwkbc21.com",
+    "type": "Fetch",
+    "initiators": [
+      "dlive.sx/stream-24.php"
+    ],
+    "error": "net::ERR_FAILED",
+    "corsError": "MissingAllowOriginHeader"
+  },
+  {
+    "host": "ntwkbc42.com",
+    "type": "Fetch",
+    "initiators": [
+      "dlive.sx/stream-24.php"
+    ],
+    "error": "net::ERR_FAILED",
+    "corsError": "MissingAllowOriginHeader"
+  },
+  {
+    "host": "plsrsvpgciwex.online",
+    "type": "Fetch",
+    "initiators": [
+      "dlive.sx/stream-24.php"
+    ],
+    "error": "net::ERR_FAILED",
+    "corsError": "MissingAllowOriginHeader"
+  },
+  {
+    "host": "www.premiumvertising.com",
+    "type": "Script",
+    "initiators": [
+      "dembed.st/daddy.php"
+    ],
+    "error": "net::ERR_FAILED",
+    "corsError": "MissingAllowOriginHeader"
+  },
+  {
+    "host": "cdn.jsdelivr.net",
+    "type": "Script",
+    "initiators": [],
+    "status": 200,
+    "mime": "application/javascript",
+    "cors": "*",
+    "finished": true,
+    "encodedBytes": 0
+  },
+  {
+    "host": "cdn.jwplayer.com",
+    "type": "Script",
+    "initiators": [],
+    "status": 200,
+    "mime": "text/javascript",
+    "cors": "*",
+    "finished": true,
+    "encodedBytes": 0
+  },
+  {
+    "host": "d2j042cj1421wi.cloudfront.net",
+    "type": "Script",
+    "initiators": [
+      "dembed.st/daddy.php"
+    ],
+    "error": "net::ERR_FAILED",
+    "corsError": "MissingAllowOriginHeader"
+  },
+  {
+    "host": "entitlements.jwplayer.com",
+    "type": "XHR",
+    "initiators": [
+      "cdn.jwplayer.com/KB5zFt7A.js"
+    ],
+    "status": 200,
+    "mime": "application/json",
+    "cors": "*",
+    "finished": true,
+    "encodedBytes": 430
+  },
+  {
+    "host": "ssl.p.jwpcdn.com",
+    "type": "Script",
+    "initiators": [
+      "cdn.jwplayer.com/KB5zFt7A.js"
+    ],
+    "status": 200,
+    "mime": "text/javascript",
+    "cors": "*",
+    "finished": true,
+    "encodedBytes": 0
+  },
+  {
+    "host": "www.hhxwtohhre.com",
+    "type": "Script",
+    "initiators": [
+      "dembed.st/daddy.php"
+    ],
+    "error": "net::ERR_FAILED",
+    "corsError": "MissingAllowOriginHeader"
+  },
+  {
+    "host": "www.elbvlyqj.com",
+    "type": "Script",
+    "initiators": [
+      "dembed.st/daddy.php"
+    ],
+    "error": "net::ERR_FAILED",
+    "corsError": "MissingAllowOriginHeader"
+  },
+  {
+    "host": "cd.connatix.com",
+    "type": "Script",
+    "initiators": [
+      "cdn.jwplayer.com/KB5zFt7A.js"
+    ],
+    "status": 200,
+    "mime": "text/plain",
+    "cors": null,
+    "finished": true,
+    "encodedBytes": 0
+  },
+  {
+    "host": "edge.cowedd4855ws.sbs",
+    "type": "XHR",
+    "initiators": [
+      "dembed.st/daddy.php"
+    ],
+    "status": 200,
+    "mime": "application/vnd.apple.mpegurl",
+    "cors": "https://dembed.st",
+    "finished": true,
+    "encodedBytes": 1385
+  },
+  {
+    "host": "",
+    "type": "Image",
+    "initiators": [],
+    "status": 200,
+    "mime": "image/png",
+    "cors": null,
+    "finished": true,
+    "encodedBytes": 0
+  },
+  {
+    "host": "prd.jwpltx.com",
+    "type": "Image",
+    "initiators": [],
+    "status": 200,
+    "mime": "text/plain",
+    "cors": null,
+    "finished": true,
+    "encodedBytes": 0
+  },
+  {
+    "host": "adexchangerapid.com",
+    "type": "Fetch",
+    "initiators": [
+      "dembed.st/daddy.php"
+    ],
+    "error": "net::ERR_FAILED",
+    "corsError": "MissingAllowOriginHeader"
+  },
+  {
+    "host": "plsrsvpgciwex.online",
+    "type": "Fetch",
+    "initiators": [
+      "dembed.st/daddy.php"
+    ],
+    "error": "net::ERR_FAILED",
+    "corsError": "MissingAllowOriginHeader"
+  },
+  {
+    "host": "p19-common-sign.tiktokcdn-us.com",
+    "type": "XHR",
+    "initiators": [
+      "dembed.st/daddy.php"
+    ],
+    "status": 200,
+    "mime": "image/png",
+    "cors": "*",
+    "error": "net::ERR_ABORTED",
+    "corsError": null
+  },
+  {
+    "host": "p19-common-sign.tiktokcdn-us.com",
+    "type": "XHR",
+    "initiators": [
+      "dembed.st/daddy.php"
+    ],
+    "status": 200,
+    "mime": "image/png",
+    "cors": "*"
+  }
+]

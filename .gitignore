@@ -14,7 +14,7 @@ keystore.properties
 *.apk
 *.aab
 dist/
-audit/
+/audit/
 app/src/main/assets/logo_api_key.txt
 *.log
 *.hprof
