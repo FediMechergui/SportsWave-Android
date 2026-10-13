@@ -1,0 +1,80 @@
+{
+  "providers": [
+    {
+      "id": "todaystreams",
+      "name": "TodayStreams",
+      "hosts": [
+        "todaystreams.cc",
+        "*.todaystreams.cc"
+      ],
+      "pathPrefix": "/play/",
+      "mode": "web",
+      "enabled": true,
+      "priority": 10,
+      "resourceHosts": [
+        "todaystreams.cc",
+        "*.todaystreams.cc",
+        "dlive.sx",
+        "dembed.st"
+      ],
+      "frameProviders": ["daddylive", "dembed"]
+    },
+    {
+      "id": "daddylive",
+      "name": "DaddyLive",
+      "hosts": [
+        "dlive.sx",
+        "*.dlive.sx"
+      ],
+      "pathPrefix": "/stream/",
+      "mode": "web",
+      "enabled": true,
+      "priority": 20,
+      "resourceHosts": [
+        "dlive.sx",
+        "*.dlive.sx",
+        "dembed.st"
+      ],
+      "frameProviders": ["dembed"]
+    },
+    {
+      "id": "dembed",
+      "name": "Dembed",
+      "hosts": [
+        "dembed.st",
+        "*.dembed.st"
+      ],
+      "pathPrefix": "/",
+      "mode": "web",
+      "enabled": true,
+      "priority": 30,
+      "resourceHosts": [
+        "dembed.st",
+        "*.dembed.st",
+        "cdn.jsdelivr.net",
+        "cdn.jwplayer.com",
+        "ssl.p.jwpcdn.com",
+        "entitlements.jwplayer.com",
+        "edge.cowedd4855ws.sbs",
+        "p16-common-sign.tiktokcdn-us.com",
+        "p19-common-sign.tiktokcdn-us.com"
+      ]
+    },
+    {
+      "id": "yasirtv",
+      "name": "YasirTV",
+      "hosts": [
+        "yasirtv.com",
+        "*.yasirtv.com"
+      ],
+      "pathPrefix": "/playerv5.php",
+      "mode": "web",
+      "enabled": true,
+      "priority": 40,
+      "resourceHosts": [
+        "yasirtv.com",
+        "*.yasirtv.com"
+      ]
+    }
+  ]
+}

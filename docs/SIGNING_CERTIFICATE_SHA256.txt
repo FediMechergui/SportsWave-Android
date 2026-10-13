@@ -1,0 +1,2 @@
+SportsWave release signing certificate SHA-256
+6ee702665c1abab65deb5fe41e59b8b303835e68ab42553c58f8478f0333614f
