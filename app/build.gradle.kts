@@ -19,8 +19,8 @@ android {
         applicationId = "com.example.sportsstream"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.0.0-beta.1"
+        versionCode = 3
+        versionName = "1.0.0-beta.2"
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -56,6 +56,7 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer-dash:$media3")
     implementation("androidx.media3:media3-ui:$media3")
     implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("androidx.webkit:webkit:1.17.1")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
 }

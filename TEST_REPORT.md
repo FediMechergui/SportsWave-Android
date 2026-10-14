@@ -1,3 +1,22 @@
+# Latest verification - 2026-10-14
+
+Version 1.0.0-beta.2, versionCode 3. The signed, minified release APK was installed directly in a dedicated SportsWave_API35 Android 15 emulator (emulator-5556), separate from the emulator used by another agent.
+
+- All 24 offline unit tests pass. Signed APK and AAB builds, vital lint, R8 and resource shrinking pass.
+- APK signature verifies and matches the beta.1 release certificate. Zip alignment including 16 KB page alignment passes. Bundletool validates the AAB; jarsigner verifies it with the same self-signed/timestamp/archive-order warnings documented for beta.1.
+- Signed release VIPRow Football loaded 195 events. Changing to League sorting visibly reordered upcoming rows. The corrected MMA route loaded ONE Friday Fights 171 as a single upcoming event; Ice hockey loaded 34 events.
+- Arryadia: Channels -> published channel redirect -> AlbaPlayer -> SNRT produced visible moving video in the signed APK. Normal playback and landscape HTML fullscreen were observed; the activity retained the same ActivityRecord during rotation, and Back returned to player choices. The unconditional no-video hint no longer overlays successful playback.
+- Earlier Android 17 debug measurements recorded readyState 4, videoWidth 854, unpaused playback and currentTime advancing from 21580.613967 to 21590.14457.
+- Native public Mux HLS parsed its duration and rendered a sample frame on Android 15 after buffering. Sustained playback is not certified by that frame alone; Android 17 had previously shown corruption. DASH remains untested.
+- Livekora published 11 match cards on October 13 and zero on the October 14 morning check. The empty state is truthful; reviewed channel-page links remain in Channels rather than being fabricated as fixtures.
+- beIN Sports 4: the missing Chrome namespace caused a Cast-plugin exception before video creation. The scoped document-start compatibility fix now initializes the player, but its observed remote media request stalled/aborted. No successful beIN playback is claimed and no access keys or headers were forged.
+
+Current evidence: [signed fullscreen playback](docs/audit/signed-snrt-fullscreen-api35.png), [signed channel video](docs/audit/signed-snrt-playing-api35.png), [native HLS sample frame](docs/audit/signed-native-hls-api35.png), [debug playback samples](docs/audit/snrt-playback-2026-10-14.json).
+
+The earlier failed release gate below is historical and is superseded for this specifically scoped prerelease by the verified channel playback above. It is not a certification of all providers. KooraTV/KorahLive schedules, live-score feeds, complete RTL/localization, canonical team identities and broad provider playback still require further work or external data access.
+
+---
+
 # Verification — 2026-10-13
 
 ## Signed prerelease packaging
@@ -61,3 +80,22 @@ Fixtures are synthetic and require no live sports feed. Filtering tests exercise
 `adb devices` returned no attached device or emulator. Installation, catalogue → player list → fullscreen, popup behavior, refusal states, Arabic rendering and actual HLS/DASH playback could not be exercised. No automated playback test was claimed.
 
 The complete v2 acceptance criteria are not yet met: KooraTV server discovery and KorahLive script-rendered schedules remain unsupported; remote trusted configuration is not implemented. Catalogues remain separate; conservative matching exists as a tested utility. WebView filtering can block required provider resources until explicit reviewed hosts are configured and does not cover all browser-managed traffic or redirected subresource chains.
+
+
+## Livekora integration - 2026-10-13
+
+Added offline tests for distinct fixtures sharing a channel URL, kickoff timezone conversion, invalid timestamps, lookalike hosts, unsupported sports, and explicit commentary-language metadata. The full suite has 22 tests. Debug build and initial test run passed. Emulator installation succeeded; selecting Livekora loaded 11 published football fixtures. Opening the selected FUS Rabat - Raja channel returned the resolver's unavailable state; no successful video playback is claimed. This check exposed schedule-only fixtures being marked live indefinitely. Their labels now say scheduled/status unverified and use a four-hour current-section window, moving older fixtures to Earlier fixtures without asserting an official end time.
+
+
+## Release verification gate - 2026-10-13
+
+Result: FAILED; no commit, tag, push, or release published for this update.
+
+- Latest debug build installed successfully on emulator-5554.
+- Livekora loaded 11 fixtures with scheduled/status-unverified labels.
+- Changing Relevance to Kickoff visibly reordered the current fixtures.
+- Opening Arsenal - Lille returned Event page unavailable in the resolver. The preceding FUS Rabat - Raja check had the same result. Neither reached verified video playback.
+- VIPRow Football displayed its schedule timeout state during this run.
+- The preceding final build passed all 22 offline unit tests, but these do not certify external feed availability or video playback.
+
+Local evidence: audit/release-home, audit/release-livekora, audit/release-sort, audit/release-player-result (PNG/XML/JSON; ignored development artifacts). These observations prevent representing this update as a working playback release.

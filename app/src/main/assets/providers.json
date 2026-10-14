@@ -17,7 +17,10 @@
         "dlive.sx",
         "dembed.st"
       ],
-      "frameProviders": ["daddylive", "dembed"]
+      "frameProviders": [
+        "daddylive",
+        "dembed"
+      ]
     },
     {
       "id": "daddylive",
@@ -35,7 +38,9 @@
         "*.dlive.sx",
         "dembed.st"
       ],
-      "frameProviders": ["dembed"]
+      "frameProviders": [
+        "dembed"
+      ]
     },
     {
       "id": "dembed",
@@ -74,6 +79,48 @@
       "resourceHosts": [
         "yasirtv.com",
         "*.yasirtv.com"
+      ]
+    },
+    {
+      "id": "albaplayer",
+      "name": "AlbaPlayer",
+      "hosts": [
+        "pl.matchlivehd.com"
+      ],
+      "pathPrefix": "/albaplayer/",
+      "mode": "web",
+      "enabled": true,
+      "priority": 50,
+      "resourceHosts": [
+        "pl.matchlivehd.com",
+        "cdn.jsdelivr.net",
+        "snrt.player.easybroadcast.io",
+        "pull.gosh6.app",
+        "www.gstatic.com"
+      ],
+      "frameProviders": [
+        "snrt"
+      ]
+    },
+    {
+      "id": "snrt",
+      "name": "SNRT",
+      "hosts": [
+        "snrt.player.easybroadcast.io"
+      ],
+      "pathPrefix": "/events/",
+      "mode": "web",
+      "enabled": true,
+      "priority": 60,
+      "resourceHosts": [
+        "snrt.player.easybroadcast.io",
+        "cdn.jsdelivr.net",
+        "fonts.googleapis.com",
+        "fonts.gstatic.com",
+        "token.easybroadcast.io",
+        "libs.easybroadcast.io",
+        "cdn.live.easybroadcast.io",
+        "imasdk.googleapis.com"
       ]
     }
   ]

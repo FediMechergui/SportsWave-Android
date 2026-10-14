@@ -15,6 +15,8 @@ import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.webkit.WebViewCompat
+import androidx.webkit.WebViewFeature
 import java.net.URI
 
 /** Fullscreen player webpage, with no browser chrome and no popup windows. */
@@ -138,18 +140,14 @@ class WebPlayerActivity : AppCompatActivity() {
             setBackgroundColor(0xCC111A2C.toInt()); setPadding(24, 18, 24, 18)
             setOnClickListener { finish() }
         }, FrameLayout.LayoutParams(-2, -2, android.view.Gravity.TOP or android.view.Gravity.START))
+        if (activeRule?.id == "albaplayer" && WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
+            // The optional Cast plugin dereferences window.chrome before testing cast availability.
+            // Supply only the missing namespace; do not fabricate a Cast API or touch player credentials.
+            WebViewCompat.addDocumentStartJavaScript(browser,
+                "if (typeof window.chrome === 'undefined') window.chrome = {};",
+                setOf("https://pl.matchlivehd.com"))
+        }
         browser.loadUrl(target)
-        browser.postDelayed({
-            if (web === browser && !isFinishing && errorView == null && customView == null) {
-                val hint = TextView(this).apply {
-                    text = "No video? Tap the player to start, or switch server."
-                    setTextColor(Color.WHITE); setBackgroundColor(0xDD111A2C.toInt())
-                    setPadding(24, 18, 24, 18)
-                    setOnClickListener { root.removeView(this) }
-                }
-                root.addView(hint, FrameLayout.LayoutParams(-1, -2, android.view.Gravity.BOTTOM))
-            }
-        }, 20000L)
     }
 
     private fun showError(target: String) {

@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0.0-beta.2 - 2026-10-14
+
+- Fix VIPRow schedule timeouts by attaching and disposing its loader WebView; add explicit HTTP-error feedback.
+- Add all 19 published VIPRow categories and correct the MMA route.
+- Add Livekora football metadata, preserving kickoff offsets and distinct fixtures sharing channels; ignore placeholder scores.
+- Fix reviewed Livekora wrapper redirects and add scoped AlbaPlayer/SNRT dependencies.
+- Add Relevance/Kickoff/League sorting, explicit commentary-language groups, and a separate Channels menu.
+- Fix AlbaPlayer's missing-Chrome-namespace crash without fabricating Cast support or changing access credentials.
+- Preserve the WebView through fullscreen rotation; remove misleading no-video hints during successful playback.
+- Expand offline regression coverage to 24 tests.
+
+Verified Arryadia/SNRT video playback on the Android 17 emulator. Other channels remain best effort: the sampled beIN media request stalled. Livekora may publish zero fixtures; no verified live-score feed or guaranteed match-to-channel broadcast mapping is provided. KooraTV/KorahLive schedule limitations remain documented.
+
 ## 1.0.0-beta.1 — 2026-10-13
 
 Initial published Android prerelease.

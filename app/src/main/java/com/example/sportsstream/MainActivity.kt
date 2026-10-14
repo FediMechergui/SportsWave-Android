@@ -77,7 +77,19 @@ class MainActivity : AppCompatActivity() {
         Sport("Football", "football", "⚽"), Sport("Basketball", "basketball", "🏀"),
         Sport("Tennis", "tennis", "🎾"), Sport("Motorsport", "motorsports", "🏎"),
         Sport("American football", "american-football", "🏈"),
-        Sport("Boxing", "boxing", "🥊"), Sport("MMA", "mma", "🥋")
+        Sport("Boxing", "boxing", "🥊"), Sport("MMA", "mma-events", "🥋"),
+        Sport("Ice hockey", "ice-hockey", ""),
+        Sport("Rugby", "rugby", ""),
+        Sport("Baseball", "baseball", ""),
+        Sport("Aussie rules", "aussie-rules", ""),
+        Sport("Golf", "golf", ""),
+        Sport("Darts", "darts", ""),
+        Sport("Snooker", "snooker", ""),
+        Sport("Volleyball", "volleyball", ""),
+        Sport("Handball", "handball", ""),
+        Sport("Horse racing", "horse-racing", ""),
+        Sport("Cycling", "cycling", ""),
+        Sport("More sports", "more-sports", "")
     )
     private val bg = Color.rgb(9, 14, 26)
     private val surface = Color.rgb(20, 29, 46)
@@ -103,6 +115,7 @@ class MainActivity : AppCompatActivity() {
     private var catalogueTask: java.util.concurrent.Future<*>? = null
     private var selected = sports.first()
     private var selectedFilter = "All"
+    private var sortMode = "Relevance"
     private var allFixtures: List<Fixture> = emptyList()
     private var sources: Map<String, Source> = emptyMap()
     private var webLoader: WebView? = null
@@ -173,9 +186,9 @@ class MainActivity : AppCompatActivity() {
             text = "Source: VIPRow ▾"; setTextColor(accent); textSize = 14f; setPadding(d(20), d(10), d(20), d(10))
             setOnClickListener {
                 androidx.appcompat.app.AlertDialog.Builder(this@MainActivity).setTitle("Catalogue source")
-                    .setItems(arrayOf("VIPRow", "KorahLive")) { _, index ->
-                        catalogueId = if (index == 0) "viprow" else "korahlive"
-                        text = "Source: ${if (index == 0) "VIPRow" else "KorahLive"} ▾"
+                    .setItems(arrayOf("VIPRow", "KorahLive", "Livekora")) { _, index ->
+                        catalogueId = listOf("viprow", "korahlive", "livekora")[index]
+                        text = "Source: ${listOf("VIPRow", "KorahLive", "Livekora")[index]} ▾"
                         allFixtures = emptyList(); loadSchedule(silent = false)
                     }.show()
             }
@@ -223,6 +236,18 @@ class MainActivity : AppCompatActivity() {
         renderSportChips()
 
         tabs = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(d(18), d(4), d(18), d(6)) }
+        outer.addView(TextView(this).apply {
+            text = "Sort: Relevance"; setTextColor(accent); textSize = 13f
+            setPadding(d(20), d(8), d(20), d(8))
+            setOnClickListener {
+                val modes = arrayOf("Relevance", "Kickoff", "League")
+                androidx.appcompat.app.AlertDialog.Builder(this@MainActivity)
+                    .setTitle("Sort events")
+                    .setItems(modes) { _, index ->
+                        sortMode = modes[index]; text = "Sort: $sortMode"; rebuild()
+                    }.show()
+            }
+        })
         outer.addView(tabs)
         renderTabs(0, 0, 0)
 
@@ -248,6 +273,7 @@ class MainActivity : AppCompatActivity() {
         }
         outer.addView(bottom)
         bottomButton(bottom, "◉ Events") { listView.smoothScrollToPosition(0) }
+        bottomButton(bottom, "Channels") { showChannels() }
         bottomButton(bottom, "▶ HLS test") { openPlayer("https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8", "hls") }
     }
 
@@ -280,7 +306,8 @@ class MainActivity : AppCompatActivity() {
         val labels = listOf("All" to all, "Live" to live, "Upcoming" to upcoming)
         labels.forEachIndexed { index, (label, count) ->
             val active = label == selectedFilter
-            val caption = if (allFixtures.isEmpty()) label.uppercase() else "${label.uppercase()}  $count"
+            val displayLabel = if (catalogueId == "livekora" && label == "Live") "NOW" else label.uppercase()
+            val caption = if (allFixtures.isEmpty()) displayLabel else "$displayLabel  $count"
             val view = text(caption, 11f, if (active) bg else muted, true).apply {
                 gravity = Gravity.CENTER; background = shape(if (active) accent else surface, 12)
                 setOnClickListener {
@@ -306,7 +333,7 @@ class MainActivity : AppCompatActivity() {
     private fun loadSchedule(silent: Boolean) {
         catalogueTask?.cancel(true)
         val seq = ++generation
-        webLoader?.apply { stopLoading(); destroy() }
+        webLoader?.apply { disposeBrowser(this) }
         webLoader = null
         loading = true
         loadError = null
@@ -319,17 +346,20 @@ class MainActivity : AppCompatActivity() {
             swipe.isRefreshing = true
         }
         rebuild()
-        if (catalogueId == "korahlive") {
+        if (catalogueId != "viprow") {
+            val provider: CatalogueProvider = if (catalogueId == "livekora") LivekoraCatalogue() else KorahLiveCatalogue()
+            val sourceName = if (catalogueId == "livekora") "Livekora" else "KorahLive"
             val sport = selected.slug
             catalogueTask = catalogueExecutor.submit {
-                val result = runCatching { KorahLiveCatalogue().load(sport) }
+                val result = runCatching { provider.load(sport) }
                 runOnUiThread {
                     if (generation != seq || isFinishing || isDestroyed) return@runOnUiThread
                     allFixtures = result.getOrDefault(emptyList()).map {
                         Fixture(it.id, it.name, it.league, it.start, it.end, it.sport, it.url)
                     }
-                    loadError = if (result.isFailure) "KorahLive unavailable. Pull down to retry."
-                        else if (allFixtures.isEmpty()) "KorahLive exposes no compatible public event metadata. Channel posts are not matches."
+                    loadError = if (result.isFailure) "$sourceName unavailable. Pull down to retry."
+                        else if (allFixtures.isEmpty() && provider.id == "livekora") "Livekora currently publishes no ${selected.name.lowercase()} matches. Published channels are available in Channels."
+                        else if (allFixtures.isEmpty()) "$sourceName lists no compatible ${selected.name.lowercase()} events. Channel posts are not matches."
                         else null
                     lastUpdated = System.currentTimeMillis(); loadedOk = result.isSuccess; finishLoad()
                 }
@@ -347,6 +377,15 @@ class MainActivity : AppCompatActivity() {
         browser.settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW
         browser.settings.setSupportMultipleWindows(false)
         browser.webViewClient = object : WebViewClient() {
+            override fun onReceivedHttpError(view: WebView?, request: WebResourceRequest?, response: WebResourceResponse?) {
+                if (request?.isForMainFrame == true && generation == seq && webLoader === browser) {
+                    loadError = "VIPRow returned HTTP ${response?.statusCode ?: 0}. Try another catalogue or retry later."
+                    finishLoad()
+                    browser.stopLoading()
+                    webLoader = null
+                    handler.post { disposeBrowser(browser) }
+                }
+            }
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean =
                 request != null && !UrlPolicy.allowsResource(request.url.toString(), listOf("viprow.im"))
 
@@ -357,7 +396,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {
-                if (generation != seq || url?.startsWith(page) != true) return
+                if (generation != seq || webLoader !== browser || !loading || url?.startsWith(page) != true) return
                 fun collect(attempt: Int) {
                     if (generation != seq || webLoader !== browser || isFinishing || isDestroyed) return
                 val script = """(function(){try{let p=window.ftbPageData;if(!p||!p.schedule)return '';let leagues=p.league||p.leagueList||{};let rows=Array.isArray(p.schedule)?p.schedule:Object.values(p.schedule);let links=[...document.querySelectorAll('a[href]')];return JSON.stringify(rows.map(x=>({id:x.id,name:x.name,start:x.start,end:x.end,url:links.find(a=>new URL(a.href).pathname.split('/').includes(String(x.id)))?.href||'',league:leagues[x.league_id]?.name||'Other competition'})));}catch(e){return ''}})()"""
@@ -390,7 +429,7 @@ class MainActivity : AppCompatActivity() {
                         if (allFixtures.isEmpty()) loadError = "Catalogue unavailable right now. Pull down to retry."
                     }
                     finishLoad()
-                    if (webLoader === browser) { webLoader = null; browser.destroy() }
+                    if (webLoader === browser) { webLoader = null; disposeBrowser(browser) }
                 }
                 }
                 collect(0)
@@ -400,18 +439,50 @@ class MainActivity : AppCompatActivity() {
                 if (request?.isForMainFrame == true && generation == seq) {
                     loadError = "Website unavailable. Check your connection and pull down to retry."
                     finishLoad()
+                    if (webLoader === browser) {
+                        webLoader = null
+                        handler.post { disposeBrowser(browser) }
+                    }
                 }
             }
         }
+        // Attached WebViews participate in the Android/Chromium rendering lifecycle.
+        findViewById<FrameLayout>(android.R.id.content).addView(browser, FrameLayout.LayoutParams(1, 1))
         browser.loadUrl(page)
         handler.postDelayed({
             if (generation == seq && loading) {
-                webLoader?.apply { stopLoading(); destroy() }
+                webLoader?.apply { disposeBrowser(this) }
                 webLoader = null
                 loadError = "The schedule took too long to load. Pull down to retry."
                 finishLoad()
             }
         }, LOAD_TIMEOUT_MS)
+    }
+
+    private fun disposeBrowser(browser: WebView) {
+        (browser.parent as? ViewGroup)?.removeView(browser)
+        browser.stopLoading()
+        browser.destroy()
+    }
+
+    private fun showChannels() {
+        val channels = runCatching {
+            val data = assets.open("channels.json").bufferedReader().use { JSONObject(it.readText()).getJSONArray("channels") }
+            (0 until data.length()).mapNotNull { index ->
+                val item = data.getJSONObject(index)
+                val url = item.optString("url")
+                if (UrlPolicy.allowsResource(url, listOf("pl.koralive1.cc"))) item.optString("name") to url else null
+            }
+        }.getOrDefault(emptyList())
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Channels")
+            .setItems(channels.map { it.first }.toTypedArray()) { _, index ->
+                val (name, url) = channels[index]
+                startActivity(Intent(this, ResolveActivity::class.java).apply {
+                    putExtra("event_name", "$name - channel")
+                    putExtra("event_url", url)
+                })
+            }.setNegativeButton("Close", null).show()
     }
 
     private fun finishLoad() {
@@ -425,6 +496,7 @@ class MainActivity : AppCompatActivity() {
     private fun phase(f: Fixture, now: Long): Phase = when {
         f.start <= 0L -> Phase.UPCOMING
         f.end in 1 until now -> Phase.ENDED
+        f.id.startsWith("livekora|") && now - f.start >= 4 * 3600 -> Phase.ENDED
         f.start <= now -> Phase.LIVE
         f.start - now <= SOON_WINDOW -> Phase.SOON
         else -> Phase.UPCOMING
@@ -462,16 +534,28 @@ class MainActivity : AppCompatActivity() {
         val search = query.text.toString().trim()
         val matched = allFixtures.filter { it.name.contains(search, true) || it.league.contains(search, true) }
         val phases = matched.associate { it.id to phase(it, now) }
-        fun ofPhase(vararg wanted: Phase) = matched.filter { phases[it.id] in wanted }
-        val liveNow = ofPhase(Phase.LIVE, Phase.SOON)
+        val ordering = when (sortMode) {
+            "League" -> compareBy<Fixture> { it.league.lowercase(Locale.ROOT) }.thenBy { it.start }
+            "Kickoff" -> compareBy<Fixture> { it.start }
+            else -> compareBy<Fixture> {
+                when {
+                    search.isNotBlank() && it.name.startsWith(search, true) -> 0
+                    search.isNotBlank() && it.name.contains(search, true) -> 1
+                    else -> 2
+                }
+            }.thenBy { if (it.url.isNotBlank()) 0 else 1 }
+                .thenBy { kotlin.math.abs(it.start - now) }
+        }.thenBy { it.id }
+        fun ofPhase(vararg wanted: Phase) = matched.filter { phases[it.id] in wanted }.sortedWith(ordering)
+        val liveNow = ofPhase(Phase.LIVE)
         val upcomingAll = ofPhase(Phase.SOON, Phase.UPCOMING)
-        val laterOnly = ofPhase(Phase.UPCOMING)
+        val laterOnly = upcomingAll
         val ended = ofPhase(Phase.ENDED).sortedByDescending { it.start }
 
         val rows = mutableListOf<Row>()
         fun section(title: String, list: List<Fixture>, live: Boolean = false) {
             if (list.isEmpty()) return
-            rows += Row.Header(title, list.size, live)
+            rows += Row.Header(if (catalogueId == "livekora" && live) "Scheduled now (status unverified)" else if (catalogueId == "livekora" && title == "Finished") "Earlier fixtures" else title, list.size, live)
             list.forEach { rows += Row.Match(it) }
         }
         fun byDay(list: List<Fixture>) =
@@ -502,7 +586,8 @@ class MainActivity : AppCompatActivity() {
             allFixtures.isEmpty() -> "No schedule loaded"
             else -> {
                 val updated = if (lastUpdated > 0) " · updated ${timeFormat.format(Date(lastUpdated))}" else ""
-                "${liveNow.size} live · ${allFixtures.size} events$updated"
+                if (catalogueId == "livekora") "${allFixtures.size} scheduled events · status unverified$updated"
+                else "${liveNow.size} live · ${allFixtures.size} events$updated"
             }
         }
     }
@@ -529,7 +614,7 @@ class MainActivity : AppCompatActivity() {
         catalogueExecutor.shutdownNow()
         generation++
         handler.removeCallbacksAndMessages(null)
-        webLoader?.apply { stopLoading(); destroy() }
+        webLoader?.apply { disposeBrowser(this) }
         webLoader = null
         super.onDestroy()
     }
@@ -679,12 +764,14 @@ class MainActivity : AppCompatActivity() {
                 singleTitle.text = f.name
             }
             timeBig.text = if (f.start > 0) timeFormat.format(Date(f.start * 1000L)) else "--:--"
-            timeSmall.text = relative(f, p, now)
+            timeSmall.text = if (f.id.startsWith("livekora|") && p in setOf(Phase.LIVE, Phase.ENDED))
+                "Status unverified" else relative(f, p, now)
             card.alpha = if (p == Phase.ENDED) .72f else 1f
 
             when (p) {
                 Phase.LIVE -> {
-                    pill.text = "● LIVE"; pill.setTextColor(bg); pill.background = shape(accent, 20); pulse(pill)
+                    pill.text = if (f.id.startsWith("livekora|")) "SCHEDULED" else "● LIVE"
+                    pill.setTextColor(bg); pill.background = shape(accent, 20); pulse(pill)
                     card.background = shape(surface, 18, accentDim); timeSmall.setTextColor(accent)
                 }
                 Phase.SOON -> {
@@ -699,7 +786,8 @@ class MainActivity : AppCompatActivity() {
                 }
                 Phase.ENDED -> {
                     pill.clearAnimation()
-                    pill.text = "ENDED"; pill.setTextColor(muted); pill.background = shape(surface2, 20)
+                    pill.text = if (f.id.startsWith("livekora|")) "EARLIER" else "ENDED"
+                    pill.setTextColor(muted); pill.background = shape(surface2, 20)
                     card.background = shape(surfaceDim, 18); timeSmall.setTextColor(muted)
                 }
             }
@@ -708,6 +796,7 @@ class MainActivity : AppCompatActivity() {
             val (caption, filled) = when {
                 f.url.isBlank() -> "PLAYER LINK UNAVAILABLE" to false
                 source != null -> "PLAY ${source.type.uppercase()}  ▶" to true
+                f.id.startsWith("livekora|") -> "OPEN CHANNEL  ▶" to true
                 p == Phase.LIVE || p == Phase.SOON -> "WATCH LIVE  ▶" to true
                 p == Phase.UPCOMING -> "CHOOSE PLAYER" to false
                 else -> "VIEW PLAYERS" to false

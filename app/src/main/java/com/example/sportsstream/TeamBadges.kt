@@ -39,7 +39,7 @@ object TeamBadges {
     private var dir: File? = null
     private var apiKey = DEFAULT_KEY
     private var lastCall = 0L
-    private val individualSports = setOf("tennis", "boxing", "mma")
+    private val individualSports = setOf("tennis", "boxing", "mma", "mma-events")
 
     fun init(context: Context) {
         if (dir != null) return

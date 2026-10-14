@@ -4,6 +4,21 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class PlayerRequestPolicyTest {
+    @Test fun shippedAlbaRulesAllowSnrtPlaybackWithoutAdOrNavigationEscape() {
+        val asset = sequenceOf(java.io.File("src/main/assets/providers.json"), java.io.File("app/src/main/assets/providers.json"))
+            .first { it.exists() }
+        val rules = ProviderRegistry.parse(asset.readText())
+        val policy = PlayerRequestPolicy(rules.first { it.id == "albaplayer" }, rules)
+        assertTrue(policy.allowsNavigation("https://snrt.player.easybroadcast.io/events/73_arryadia_k2tgcj0", false))
+        assertFalse(policy.allowsNavigation("https://snrt.player.easybroadcast.io/events/73_arryadia_k2tgcj0", true))
+        for (host in listOf("token.easybroadcast.io", "libs.easybroadcast.io", "cdn.live.easybroadcast.io")) {
+            assertTrue(host, policy.allowsResource("https://$host/test"))
+            assertFalse(host, policy.allowsNavigation("https://$host/test", false))
+        }
+        for (host in listOf("acscdn.com", "llvpn.com", "adsco.re", "snrt.player.easybroadcast.io.evil.org")) {
+            assertFalse(host, policy.allowsResource("https://$host/test"))
+        }
+    }
     private val daddy = ProviderRule("daddylive", "DaddyLive", listOf("dlive.sx"), "/stream/", "web", 20)
     private val today = ProviderRule("todaystreams", "TodayStreams", listOf("todaystreams.cc"), "/play/", "web", 10,
         listOf("todaystreams.cc", "dlive.sx"), listOf("daddylive"))

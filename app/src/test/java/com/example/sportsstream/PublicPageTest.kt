@@ -4,6 +4,21 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class PublicPageTest {
+    @Test fun reviewedChannelRedirectWorksWithoutAllowingOtherHosts() {
+        val hosts = listOf("pl.koralive1.cc", "pl.matchlivehd.com")
+        assertEquals("https://pl.matchlivehd.com/bein4/", PublicPage.redirect(
+            "https://pl.koralive1.cc/bein4/", "https://pl.matchlivehd.com/bein4/", hosts))
+        for (target in listOf("https://pl.matchlivehd.com.evil.org/bein4/", "http://pl.matchlivehd.com/bein4/", "https://evil.org/")) {
+            assertTrue(runCatching { PublicPage.redirect("https://pl.koralive1.cc/bein4/", target, hosts) }.isFailure)
+        }
+        assertTrue(runCatching { PublicPage.redirect("https://q.korahlive.online/", "https://pl.matchlivehd.com/", listOf("q.korahlive.online")) }.isFailure)
+    }
+    @Test fun commentaryLanguageUsesExplicitMetadataNotPageLanguage() {
+        val html = """<html lang="en"><a href="https://yasirtv.com/playerv5.php?match=1" data-language="Arabic">Server 1</a><a href="https://yasirtv.com/playerv5.php?match=2&amp;lang=en">Server 2</a></html>"""
+        val sources = PublicPage.players(Jsoup.parse(html, "https://q.korahlive.online/"), listOf(rule))
+        assertEquals("Arabic", sources[0].language)
+        assertNull(sources[1].language)
+    }
     private val rule = ProviderRule("yasirtv", "YasirTV", listOf("yasirtv.com", "*.yasirtv.com"), "/playerv5.php", "web", 1)
     @Test fun allEmbeddedUrlsKeepOriginalKeysAndArabicLabels() {
         val html = """<a href="https://a.yasirtv.com/playerv5.php?match=1&amp;key=first%2Bkey" title="الخادم ١"><i>open_in_new</i>wrong label</a>

@@ -26,6 +26,7 @@ class ResolveActivity : AppCompatActivity() {
     private var staticTask: java.util.concurrent.Future<*>? = null
     private lateinit var choices: LinearLayout
     private lateinit var status: TextView
+    private val languages = mutableMapOf<String, String>()
     private val discovered = linkedMapOf<String, Pair<ProviderRule, String>>()
     private var scanningStarted = false
     private var attempts = 0
@@ -74,16 +75,19 @@ class ResolveActivity : AppCompatActivity() {
         scroll.addView(choices)
         addNativeChoice()
 
-        if (URI(eventUrl).host.equals("q.korahlive.online", true)) {
-            // This site's resolver synthesizes fallback keys; never execute it.
+        if (!URI(eventUrl).host.equals("viprow.im", true)) {
+            // Static discovery only. Livekora's channel host redirects to its reviewed wrapper host.
             staticTask = staticExecutor.submit {
                 val result = runCatching {
-                    PublicPage.players(PublicPage.load(eventUrl, listOf("q.korahlive.online")), registry.providers)
+                    val hosts = if (URI(eventUrl).host.equals("pl.koralive1.cc", true))
+                        listOf("pl.koralive1.cc", "pl.matchlivehd.com") else listOf("q.korahlive.online")
+                    PublicPage.players(PublicPage.load(eventUrl, hosts), registry.providers)
                 }
                 runOnUiThread {
                     if (isFinishing || isDestroyed) return@runOnUiThread
                     val found = linkedMapOf<String, Pair<ProviderRule, String>>()
                     result.getOrDefault(emptyList()).forEach { source ->
+                        source.language?.let { languages[source.url] = it }
                         registry.byId(source.providerId)?.let { found[source.url] = it to source.label }
                     }
                     if (found.isNotEmpty()) showPlayers(found)
@@ -136,13 +140,14 @@ class ResolveActivity : AppCompatActivity() {
         val uri = URI(value)
         UrlPolicy.https(value) != null &&
             ((uri.host.equals("viprow.im", true) && uri.path.startsWith("/sports/")) ||
-                uri.host.equals("q.korahlive.online", true))
+                uri.host.equals("q.korahlive.online", true) ||
+                uri.host.equals("pl.koralive1.cc", true))
     }.getOrDefault(false)
 
     private fun scanAgain(view: WebView) {
         if (isFinishing || isDestroyed || page !== view) return
         // Only published anchor href / data-href / src attributes, not video manifests or page secrets.
-        val script = """(function(){let a=[...document.querySelectorAll('a[href],a[data-href],a[data-url],iframe[src],iframe[data-src]')];return JSON.stringify(a.map(x=>{let c=x.cloneNode(true);c.querySelectorAll('i,svg,img,.material-icons,.material-symbols-outlined,[class*="icon"]').forEach(n=>n.remove());let w=document.createTreeWalker(c,NodeFilter.SHOW_TEXT),parts=[];while(w.nextNode()){let t=w.currentNode.nodeValue.trim();if(t)parts.push(t)}let label=x.getAttribute('title')||x.getAttribute('aria-label')||parts.join(' ')||'';return {url:new URL(x.getAttribute('href')||x.dataset.href||x.dataset.url||x.getAttribute('src')||x.dataset.src||'',document.baseURI).href,label:label.replace(/\s+/g,' ').trim().slice(0,90)};}));})()"""
+        val script = """(function(){let a=[...document.querySelectorAll('a[href],a[data-href],a[data-url],iframe[src],iframe[data-src]')];return JSON.stringify(a.map(x=>{let c=x.cloneNode(true);c.querySelectorAll('i,svg,img,.material-icons,.material-symbols-outlined,[class*="icon"]').forEach(n=>n.remove());let w=document.createTreeWalker(c,NodeFilter.SHOW_TEXT),parts=[];while(w.nextNode()){let t=w.currentNode.nodeValue.trim();if(t)parts.push(t)}let label=x.getAttribute('title')||x.getAttribute('aria-label')||parts.join(' ')||'';return {url:new URL(x.getAttribute('href')||x.dataset.href||x.dataset.url||x.getAttribute('src')||x.dataset.src||'',document.baseURI).href,language:x.getAttribute('data-language')||'',label:label.replace(/\s+/g,' ').trim().slice(0,90)};}));})()"""
 
         view.evaluateJavascript(script) { encoded ->
             if (isFinishing || isDestroyed) return@evaluateJavascript
@@ -155,6 +160,7 @@ class ResolveActivity : AppCompatActivity() {
                     val url = obj.optString("url")
                     val provider = registry.match(url) ?: continue
                     val label = UrlPolicy.label(obj.optString("title"), obj.optString("label"), provider.name)
+                    obj.optString("language").trim().takeIf { it.isNotBlank() && it.length <= 40 }?.let { languages[url] = it }
                     found.putIfAbsent(url, provider to label)
                 }
             } catch (_: Exception) { /* Retry; page JS may not be ready. */ }
@@ -177,7 +183,16 @@ class ResolveActivity : AppCompatActivity() {
         status.text = "${players.size} available player choice(s)"
         choices.removeAllViews()
         addNativeChoice()
-        players.entries.sortedWith(compareBy({ it.value.first.priority }, { it.value.second })).forEach { (url, info) ->
+        var previousLanguage: String? = null
+        players.entries.sortedWith(compareBy({ languages[it.key] ?: "Unknown commentary language" }, { it.value.first.priority }, { it.value.second })).forEach { (url, info) ->
+            val language = languages[url] ?: "Unknown commentary language"
+            if (language != previousLanguage) {
+                choices.addView(TextView(this).apply {
+                    text = language; textSize = 14f; setTextColor(accent)
+                    setPadding(0, dp(12), 0, dp(12))
+                })
+                previousLanguage = language
+            }
             val label = info.second.takeIf { it.isNotBlank() && it.length < 60 } ?: info.first.name
             val quality = Regex("\\b(4K|UHD|FHD|HD|SD)\\b", RegexOption.IGNORE_CASE).find(label)?.value?.uppercase()
             val title = if (quality != null) label.replace(Regex("\\s*\\b$quality\\b\\s*", RegexOption.IGNORE_CASE), " ").trim() else label
@@ -187,7 +202,7 @@ class ResolveActivity : AppCompatActivity() {
                 background = rounded(panel)
                 setPadding(dp(16), dp(16), dp(16), dp(16))
                 setOnClickListener {
-                    val source = PlayerSource(url, info.first.id, label, url, PlaybackMode.WEB_EMBED)
+                    val source = PlayerSource(url, info.first.id, label, url, PlaybackMode.WEB_EMBED, languages[url])
                     val resolved = registry.adapter(info.first.id)?.resolve(source)
                     if (resolved !is PlaybackResult.Embedded) { status.text = "Player unavailable"; return@setOnClickListener }
                     startActivity(Intent(this@ResolveActivity, WebPlayerActivity::class.java).apply {

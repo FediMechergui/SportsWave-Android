@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-14",
+  "device": "Android 17 emulator-5554",
+  "entry": "Channels > Arryadia / SNRT > AlbaPlayer",
+  "videoSamples": [
+    {
+      "readyState": 4,
+      "paused": false,
+      "currentTime": 21580.613967,
+      "videoWidth": 854
+    },
+    {
+      "readyState": 4,
+      "paused": false,
+      "currentTime": 21590.14457,
+      "videoWidth": 854
+    }
+  ],
+  "scope": "Channel video playback verified; this does not verify a particular fixture broadcast. No session queries or media bodies recorded."
+}
