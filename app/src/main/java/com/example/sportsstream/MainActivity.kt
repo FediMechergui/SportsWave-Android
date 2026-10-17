@@ -121,7 +121,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tabs: LinearLayout
     private val adapter = CatalogueAdapter()
     private var catalogueId = "all"
-    private var supplemental: List<Fixture> = emptyList()
     private var sourceStatus = ""
     private val catalogueExecutor = java.util.concurrent.Executors.newSingleThreadExecutor()
     private var catalogueTask: java.util.concurrent.Future<*>? = null
@@ -392,7 +391,7 @@ class MainActivity : AppCompatActivity() {
         catalogueTask?.cancel(true)
         val seq = ++generation
         previousFixtures = allFixtures
-        supplemental = emptyList(); sourceStatus = ""
+        sourceStatus = ""
         webLoader?.apply { disposeBrowser(this) }
         webLoader = null
         loading = true
@@ -417,13 +416,13 @@ class MainActivity : AppCompatActivity() {
                     if (Thread.currentThread().isInterrupted) return@submit
                     val result = runCatching { provider.load(sport) }
                     statuses += "${provider.id}: " + if (result.isSuccess) "${result.getOrThrow().size} events" else "unavailable"
+                    val statusText = statuses.joinToString(" \u00b7 ")
                     runOnUiThread {
                         if (generation != seq || isFinishing || isDestroyed) return@runOnUiThread
-                        val incoming = if (result.isFailure) previousFixtures.filter { it.sourceId == provider.id }
-                            else result.getOrDefault(emptyList()).map { fixture(it) }
-                        supplemental = (supplemental + incoming).distinctBy { it.id }
-                        allFixtures = (allFixtures.filter { it.sourceId == "viprow" } + supplemental).distinctBy { it.sourceId to it.id }
-                        sourceStatus = statuses.joinToString(" · ")
+                        allFixtures = CatalogueRefresh.replaceSource(allFixtures.map { it.event() }, provider.id,
+                            result.getOrNull()).map { fixture(it) }
+                        lastUpdated = CatalogueRefresh.receivedAt(allFixtures.map { it.event() })
+                        sourceStatus = statusText
                         saveSnapshot()
                         rebuild()
                     }
@@ -443,7 +442,7 @@ class MainActivity : AppCompatActivity() {
                         else if (allFixtures.isEmpty() && provider.id == "livekora") "Livekora currently publishes no ${selected.name.lowercase()} matches. Published channels are available in Channels."
                         else if (allFixtures.isEmpty()) "$sourceName lists no compatible ${selected.name.lowercase()} events. Channel posts are not matches."
                         else null
-                    lastUpdated = System.currentTimeMillis(); loadedOk = result.isSuccess; finishLoad()
+                    lastUpdated = CatalogueRefresh.receivedAt(allFixtures.map { it.event() }); loadedOk = result.isSuccess; finishLoad()
                 }
             }
             return
@@ -487,7 +486,7 @@ class MainActivity : AppCompatActivity() {
                     if (generation != seq || webLoader !== browser || isFinishing || isDestroyed) return
                 val script = """(function(){try{let p=window.ftbPageData;if(!p||!p.schedule)return '';let leagues=p.league||p.leagueList||{};let rows=Array.isArray(p.schedule)?p.schedule:Object.values(p.schedule);let links=[...document.querySelectorAll('a[href]')];return JSON.stringify(rows.map(x=>({id:x.id,name:x.name,start:x.start,end:x.end,url:links.find(a=>new URL(a.href).pathname.split('/').includes(String(x.id)))?.href||'',league:leagues[x.league_id]?.name||'Other competition'})));}catch(e){return ''}})()"""
                 browser.evaluateJavascript(script) { raw ->
-                    if (generation != seq || isFinishing || isDestroyed) return@evaluateJavascript
+                    if (generation != seq || webLoader !== browser || !loading || isFinishing || isDestroyed) return@evaluateJavascript
                     try {
                         val decoded = JSONArray("[$raw]").getString(0)
                         val arr = JSONArray(decoded)
@@ -496,7 +495,7 @@ class MainActivity : AppCompatActivity() {
                             browser.postDelayed({ collect(attempt + 1) }, 400L)
                             return@evaluateJavascript
                         }
-                        allFixtures = (0 until arr.length()).mapNotNull { i ->
+                        val incoming = (0 until arr.length()).mapNotNull { i ->
                             val obj = arr.optJSONObject(i) ?: return@mapNotNull null
                             val id = obj.optString("id")
                             if (id.isBlank()) null else Fixture(
@@ -504,8 +503,10 @@ class MainActivity : AppCompatActivity() {
                                 obj.optString("league", "Other competition"), obj.optLong("start"),
                                 obj.optLong("end"), sportSlug, obj.optString("url")
                             )
-                        }.let { (it + supplemental).distinctBy { event -> event.id } }.sortedBy { it.start }
-                        lastUpdated = System.currentTimeMillis()
+                        }
+                        allFixtures = CatalogueRefresh.replaceSource(allFixtures.map { it.event() }, "viprow",
+                            incoming.map { it.event() }).map { fixture(it) }.sortedBy { it.start }
+                        lastUpdated = CatalogueRefresh.receivedAt(allFixtures.map { it.event() })
                         loadedOk = true
                     } catch (_: Exception) {
                         if (attempt < 8) {
@@ -522,7 +523,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
-                if (request?.isForMainFrame == true && generation == seq) {
+                if (request?.isForMainFrame == true && generation == seq && webLoader === browser) {
                     loadError = "Website unavailable. Check your connection and pull down to retry."
                     finishLoad()
                     if (webLoader === browser) {
@@ -537,8 +538,9 @@ class MainActivity : AppCompatActivity() {
         browser.loadUrl(page)
         handler.postDelayed({
             if (generation == seq && loading) {
-                webLoader?.apply { disposeBrowser(this) }
+                val expired = webLoader
                 webLoader = null
+                expired?.let { disposeBrowser(it) }
                 loadError = "The schedule took too long to load. Pull down to retry."
                 finishLoad()
             }
@@ -582,7 +584,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun snapshotFile() = java.io.File(filesDir, "schedule-${catalogueId}-${selected.slug}.json")
     private fun saveSnapshot() {
-        if (allFixtures.isNotEmpty()) ScheduleSnapshot.save(snapshotFile(), allFixtures.map { it.event() })
+        ScheduleSnapshot.save(snapshotFile(), allFixtures.map { it.event() })
     }
 
     private fun phase(f: Fixture, now: Long): Phase = when {

@@ -23,7 +23,16 @@ class OpenLigaCatalogue : CatalogueProvider {
                 check(response.statusCode() == 200)
                 parse(response.body(), sport)
             }
-        }.map { task -> runCatching { task.get(45, java.util.concurrent.TimeUnit.SECONDS) } }
+        }.map { task ->
+            try {
+                Result.success(task.get(45, java.util.concurrent.TimeUnit.SECONDS))
+            } catch (interrupted: InterruptedException) {
+                Thread.currentThread().interrupt()
+                throw interrupted
+            } catch (error: Exception) {
+                Result.failure(error)
+            }
+        }
         } finally { pool.shutdownNow() }
         if (results.all { it.isFailure }) error("OpenLigaDB unavailable")
         return results.flatMap { it.getOrDefault(emptyList()) }

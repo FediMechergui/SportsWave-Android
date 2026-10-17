@@ -1,6 +1,6 @@
 # Building and publishing a release
 
-Release version: 1.0.0-beta.3, versionCode 4. Keep the package identity `com.example.sportsstream` and the same signing key when publishing updates.
+Release version: 1.0.0-beta.4, versionCode 5. Keep the package identity `com.example.sportsstream` and the same signing key when publishing updates.
 
 ## Signing
 

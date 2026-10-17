@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.0-beta.4 - 2026-10-18
+
+- Preserve records from other sources while each schedule refresh completes, and replace updated source records rather than keeping old scores first.
+- Keep actual retrieval timestamps after failed single-source requests.
+- Reject late catalogue callbacks after their metadata WebView is disposed or timed out.
+- Save confirmed empty schedules so previously removed fixtures do not return on restart.
+- Preserve thread interruption when cancelling OpenLigaDB requests during catalogue switches.
+- Add six regression tests for source replacement, failure freshness, empty snapshots, identity isolation and invalid provider records.
+
 ## 1.0.0-beta.3 - 2026-10-17
 
 - Add compact competition-grouped rows, date navigation, persistent favourites and editorial world-event priorities.

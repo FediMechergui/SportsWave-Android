@@ -44,3 +44,5 @@ Existing reviewed player families: TodayStreams, DaddyLive, Dembed, YasirTV, Alb
 | [TheSportsDB](https://api.thesportsdb.com/documentation) | Public demo coverage is restricted; live score access is not a free universal feed. Optional configured artwork lookup requires exact team/sport matching. |
 
 Broader dependable live coverage needs an authorized data service or hosted feed. Secrets should remain on a backend, not in a publicly distributed APK. This list records investigated candidates, not every sports website on the Internet.
+
+A completed refresh replaces only the responding source's fixtures. Pending and failed sources retain their records and original retrieval times; successful empty responses clear only that source. Confirmed empty snapshots are persisted, so removed fixtures do not reappear after restarting. Disposed metadata loaders cannot update the current catalogue.

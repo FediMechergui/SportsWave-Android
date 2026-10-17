@@ -1,3 +1,9 @@
+# Beta.4 verification - 2026-10-18
+
+- All 44 Android unit tests and three Python importer tests pass. Six added cases cover replacement of one provider's records, preservation of pending sources, failed-fetch timestamps, confirmed empty results, cross-provider IDs, invalid provider records and clearing an old disk snapshot.
+- Catalogue callbacks now check that their WebView is still active and loading. Timeouts invalidate the view before destroying it. A cancelled OpenLigaDB request restores the thread interruption and releases its worker pool.
+- The importer regression tests now also run in GitHub Actions. Existing upstream coverage and playback limitations below still apply.
+
 # Beta.3 verification - 2026-10-17
 
 - 38 Android unit tests and 3 Python importer tests pass. Signed release assembly, vital lint, R8 and 16 KB APK zip alignment pass using installed Gradle 8.11.1; the externally changed wrapper remains outside these checks.

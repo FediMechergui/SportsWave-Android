@@ -20,4 +20,13 @@ class ScheduleSnapshotTest {
             event().copy(receivedAt = now + 3600_000), event().copy(url = "javascript:alert(1)"))
         assertEquals(listOf(event()), ScheduleSnapshot.decode(ScheduleSnapshot.encode(records), now))
     }
+    @Test fun confirmedEmptyReplacesThePreviousDiskSnapshot() {
+        val file = java.io.File.createTempFile("sportswave-snapshot", ".json")
+        try {
+            ScheduleSnapshot.write(file, listOf(event().copy(receivedAt = System.currentTimeMillis())))
+            assertEquals(1, ScheduleSnapshot.read(file).size)
+            ScheduleSnapshot.write(file, emptyList())
+            assertTrue(ScheduleSnapshot.read(file).isEmpty())
+        } finally { file.delete() }
+    }
 }
