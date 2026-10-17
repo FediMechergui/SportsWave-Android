@@ -1,17 +1,19 @@
 <p align="center"><img src="docs/branding/sportswave-icon.png" width="112" alt="SportsWave wave and play icon"></p>
 <h1 align="center">SportsWave</h1>
 <p align="center">A native Android sports catalogue with in-app player discovery and fullscreen playback.</p>
-<p align="center"><a href="https://github.com/FediMechergui/SportsWave-Android/releases/tag/v1.0.0-beta.2">Download the beta</a> · <a href="PROVIDERS.md">Provider guide</a> · <a href="TEST_REPORT.md">Test report</a></p>
+<p align="center"><a href="https://github.com/FediMechergui/SportsWave-Android/releases/tag/v1.0.0-beta.3">Download the beta</a> · <a href="PROVIDERS.md">Provider guide</a> · <a href="TEST_REPORT.md">Test report</a></p>
 
 ## Install
 
-Download **SportsWave-1.0.0-beta.2.apk** from the [GitHub release](https://github.com/FediMechergui/SportsWave-Android/releases/tag/v1.0.0-beta.2). Open it on an Android 8.0+ device and allow installation from that download source if Android asks. The APK is a signed release build, not a debug APK.
+Download **SportsWave-1.0.0-beta.3.apk** from the [GitHub release](https://github.com/FediMechergui/SportsWave-Android/releases/tag/v1.0.0-beta.3). Open it on an Android 8.0+ device and allow installation from that download source if Android asks. The APK is a signed release build, not a debug APK.
 
-The release also includes **SportsWave-1.0.0-beta.2.aab** for Android store distribution and **SHA256SUMS.txt** for checking downloads. An AAB is not directly installable; use the APK on your phone. This GitHub release is not a Google Play listing.
+The release also includes **SportsWave-1.0.0-beta.3.aab** for Android store distribution and **SHA256SUMS.txt** for checking downloads. An AAB is not directly installable; use the APK on your phone. This GitHub release is not a Google Play listing.
 
 If you previously installed a development/debug APK with the same package name, Android cannot update it with the new release key. Remove that debug installation first; this removes its local app data. Future release APKs will use the same release-signing identity.
 
 ## Current beta status
+
+**Beta.3 interface/data update:** compact match rows, competition priorities, date navigation, conservative fixture merging, persistent favourites, saved schedules, score freshness, SVG crests, match details and player failure feedback. See [public data coverage](docs/PUBLIC_DATA.md) and [Apify test results](docs/APIFY.md).
 
 **This is an experimental prerelease.** VIPRow catalogue loading and Arryadia/SNRT web playback have been verified in the signed APK on Android 15, including landscape fullscreen, and in the Android 17 debug build. This does not certify every provider or channel. Native HLS previously showed emulator corruption; KooraTV/KorahLive schedules, verified live scores and full Arabic localization remain limited. See the dated checks in the test report.
 
@@ -42,7 +44,7 @@ Team crests use optional TheSportsDB lookups with local caching and initials as 
 
 ## Build from source
 
-Requirements: Android SDK 36, JDK 17+ (local verification used JDK 21), and internet access for Gradle dependencies. The repository includes **Gradle 8.11.1**, Android Gradle Plugin **8.10.1**, Kotlin **2.2.10** and Media3 **1.11.1**.
+Requirements: Android SDK 36, JDK 17+ (local verification used JDK 21), and internet access for Gradle dependencies. The project uses Android Gradle Plugin **8.10.1**, Kotlin **2.2.10** and Media3 **1.11.1**. The committed Gradle wrapper is pinned to **8.11.1**; this release was verified with that Gradle version.
 
 Open the project in Android Studio and sync, or run:
 
@@ -84,14 +86,14 @@ The source namespace/package remains `com.example.sportsstream` to preserve the 
 
 ## Tests and roadmap
 
-24 offline tests cover provider recognition, unsafe URLs, hostname boundaries, YasirTV query preservation, Arabic labels, multiple sources, deduplication, routing, event normalization/matching and nested-provider permissions. Tests do not depend on live sports feeds. GitHub Actions runs tests and produces a debug APK; signed releases use the private local signing key.
+Beta.3 includes 38 offline Android tests and three Python importer tests, adding coverage for competition priority, conservative aggregation, public scores and saved schedules. Offline tests cover provider recognition, unsafe URLs, hostname boundaries, YasirTV query preservation, Arabic labels, multiple sources, deduplication, routing, event normalization/matching and nested-provider permissions. Tests do not depend on live sports feeds. GitHub Actions runs tests and produces a debug APK; signed releases use the private local signing key.
 
 - [Actual test results and emulator limitations](TEST_REPORT.md)
 - [How to add a provider](PROVIDERS.md)
 - [Complete optimization audit](OPTIMIZATION_AUDIT.md): all 19 VIPRow routes, score-data candidates, compact league-based layouts, accessibility, Arabic support and performance.
 - [Release history](CHANGELOG.md)
 
-Immediate priorities are wider provider playback verification, a licensed live-score feed with truthful status/freshness, and compact match rows with date, league and favorite controls.
+Remaining priorities are wider provider playback verification, broader reliable score coverage, physical-device performance checks and complete Arabic localization. Beta.3 includes compact rows, date controls and favourites.
 
 
 ### Catalogue update

@@ -93,7 +93,7 @@ class WebPlayerActivity : AppCompatActivity() {
                 loading.visibility = View.VISIBLE
                 view.postDelayed({
                     if (web === view && generation == loadGeneration && !documentLoaded && !isFinishing) {
-                        view.stopLoading(); loading.visibility = View.GONE; showError(target)
+                        view.stopLoading(); loading.visibility = View.GONE; showError(target, "Player page timed out")
                     }
                 }, 25000L)
             }
@@ -103,13 +103,13 @@ class WebPlayerActivity : AppCompatActivity() {
             }
             override fun onReceivedHttpError(view: WebView, request: WebResourceRequest, response: WebResourceResponse) {
                 if (request.isForMainFrame || requestPolicy.allowsNavigation(request.url.toString(), false)) {
-                    loading.visibility = View.GONE; showError(target)
+                    loading.visibility = View.GONE; showError(target, "Player page/frame returned HTTP ${response.statusCode}")
                 }
             }
             override fun onReceivedError(view: WebView, request: WebResourceRequest,
                                          error: android.webkit.WebResourceError) {
                 if (request.isForMainFrame || requestPolicy.allowsNavigation(request.url.toString(), false)) {
-                    loading.visibility = View.GONE; showError(target)
+                    loading.visibility = View.GONE; showError(target, "Player page/frame network error (${error.errorCode})")
                 }
             }
         }
@@ -150,10 +150,11 @@ class WebPlayerActivity : AppCompatActivity() {
         browser.loadUrl(target)
     }
 
-    private fun showError(target: String) {
+    private fun showError(target: String, reason: String) {
         if (errorView != null || isFinishing) return
+        PlayerFailures.record(this, target)
         errorView = TextView(this).apply {
-            text = "Player unavailable. Tap to retry or switch server."
+            text = "$reason.\nTap to retry, or use Back / Switch server."
             textSize = 17f; setTextColor(Color.WHITE); setBackgroundColor(0xDD111A2C.toInt())
             setPadding(30, 30, 30, 30)
             setOnClickListener { root.removeView(this); errorView = null; web?.loadUrl(target) }

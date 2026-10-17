@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0.0-beta.3 - 2026-10-17
+
+- Add compact competition-grouped rows, date navigation, persistent favourites and editorial world-event priorities.
+- Combine available schedules with selected OpenLigaDB football, hockey and darts matchdays, reported scores and source freshness.
+- Conservatively merge matching fixtures while preserving women's, youth and ambiguous identities and actual player links.
+- Retain saved schedules for offline use, preserve retrieval timestamps after provider failures and limit automatic retries.
+- Render bounded raster/SVG team crests with initials when artwork is unavailable.
+- Add match details and recent player-failure feedback; destroy metadata WebViews after discovery or errors.
+- Report resolver HTTP failures explicitly and prevent stale callbacks from restarting disposed scans.
+- Expand verification to 38 Android unit tests and three Python importer tests. Apify checks did not produce an active feed; credentials remain outside the app.
+
+Android 15 verification loaded 87 OpenLigaDB fixtures, published crests and truthful score/source details while other schedule sources were unavailable. Earlier channel-playback evidence remains documented; this release does not certify every provider or provide comprehensive verified live scores.
+
 ## 1.0.0-beta.2 - 2026-10-14
 
 - Fix VIPRow schedule timeouts by attaching and disposing its loader WebView; add explicit HTTP-error feedback.

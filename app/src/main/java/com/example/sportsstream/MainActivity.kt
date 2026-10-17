@@ -51,13 +51,22 @@ class MainActivity : AppCompatActivity() {
     private data class Sport(val name: String, val slug: String, val emoji: String)
     private data class Fixture(
         val id: String, val name: String, val league: String,
-        val start: Long, val end: Long, val sport: String, val url: String = ""
+        val start: Long, val end: Long, val sport: String, val url: String = "",
+        val homeScore: Int? = null, val awayScore: Int? = null,
+        val homeLogo: String = "", val awayLogo: String = "",
+        val sourceId: String = "viprow", val receivedAt: Long = System.currentTimeMillis(),
+        val status: String = "unknown", val memberIds: Set<String> = emptySet()
     ) {
         val teams: Pair<String, String>? = name.split(TEAM_SPLIT, limit = 2).map { it.trim() }
             .takeIf { it.size == 2 && it.all { part -> part.isNotEmpty() } }?.let { it[0] to it[1] }
     }
+    private fun Fixture.event() = SportEvent(id, sourceId, name, league, start, end, sport, url,
+        teams?.first.orEmpty(), teams?.second.orEmpty(), homeScore, awayScore, homeLogo, awayLogo, receivedAt, status)
+    private fun fixture(event: SportEvent) = Fixture(event.id, event.name, event.league, event.start,
+        event.end, event.sport, event.url, event.homeScore, event.awayScore, event.homeLogo, event.awayLogo,
+        event.catalogueId, event.receivedAt.takeIf { it > 0 } ?: System.currentTimeMillis(), event.status)
     private data class Source(val type: String, val url: String)
-    private enum class Phase { LIVE, SOON, UPCOMING, ENDED }
+    private enum class Phase { LIVE, SOON, UPCOMING, ENDED, UNKNOWN }
     private sealed class Row {
         data class Header(val title: String, val count: Int, val live: Boolean) : Row()
         data class Match(val fixture: Fixture) : Row()
@@ -106,30 +115,42 @@ class MainActivity : AppCompatActivity() {
     private lateinit var listView: RecyclerView
     private lateinit var swipe: SwipeRefreshLayout
     private lateinit var subtitle: TextView
+    private lateinit var health: TextView
     private lateinit var query: EditText
     private lateinit var chips: LinearLayout
     private lateinit var tabs: LinearLayout
     private val adapter = CatalogueAdapter()
-    private var catalogueId = "viprow"
+    private var catalogueId = "all"
+    private var supplemental: List<Fixture> = emptyList()
+    private var sourceStatus = ""
     private val catalogueExecutor = java.util.concurrent.Executors.newSingleThreadExecutor()
     private var catalogueTask: java.util.concurrent.Future<*>? = null
     private var selected = sports.first()
     private var selectedFilter = "All"
+    private var favouritesOnly = false
+    private val favouriteIds by lazy { getPreferences(MODE_PRIVATE).getStringSet("favourite_matches", emptySet())!!.toMutableSet() }
     private var sortMode = "Relevance"
+    private var selectedDay: LocalDate? = null
+    private var previousFixtures: List<Fixture> = emptyList()
+    private var uniqueCount = 0
     private var allFixtures: List<Fixture> = emptyList()
+    private var mergedInput: List<Fixture>? = null
+    private var mergedFixtures: List<Fixture> = emptyList()
     private var sources: Map<String, Source> = emptyMap()
     private var webLoader: WebView? = null
     private var generation = 0
     private var loading = false
     private var loadError: String? = null
     private var lastUpdated = 0L
+    private var lastAttempt = 0L
     private var loadedOk = false
     private val handler = Handler(Looper.getMainLooper())
     private val timeFormat by lazy { android.text.format.DateFormat.getTimeFormat(this) }
     private val tick = object : Runnable {
         override fun run() {
             val stale = lastUpdated > 0 && System.currentTimeMillis() - lastUpdated > AUTO_RELOAD_MS
-            if (stale && !loading) loadSchedule(silent = true) else rebuild()
+            val retryDue = System.currentTimeMillis() - lastAttempt >= AUTO_RELOAD_MS
+            if (stale && retryDue && !loading) loadSchedule(silent = true) else rebuild()
             handler.postDelayed(this, TICK_MS)
         }
     }
@@ -141,7 +162,21 @@ class MainActivity : AppCompatActivity() {
         TeamBadges.init(this)
         sources = readSources()
         createUi()
-        loadSchedule(silent = false)
+        loading = true
+        rebuild()
+        // Draw native content before initializing the cold WebView provider.
+        val decor = window.decorView
+        decor.viewTreeObserver.addOnDrawListener(object : android.view.ViewTreeObserver.OnDrawListener {
+            private var started = false
+            override fun onDraw() {
+                if (started) return
+                started = true
+                decor.post {
+                    if (decor.viewTreeObserver.isAlive) decor.viewTreeObserver.removeOnDrawListener(this)
+                    if (!isFinishing && !isDestroyed) loadSchedule(silent = false)
+                }
+            }
+        })
     }
 
     override fun onResume() {
@@ -183,12 +218,12 @@ class MainActivity : AppCompatActivity() {
         val outer = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(bg) }
         setContentView(outer)
         val catalogueChoice = TextView(this).apply {
-            text = "Source: VIPRow ▾"; setTextColor(accent); textSize = 14f; setPadding(d(20), d(10), d(20), d(10))
+            text = "Schedules: All public sources ▾"; setTextColor(accent); textSize = 14f; setPadding(d(20), d(10), d(20), d(10))
             setOnClickListener {
                 androidx.appcompat.app.AlertDialog.Builder(this@MainActivity).setTitle("Catalogue source")
-                    .setItems(arrayOf("VIPRow", "KorahLive", "Livekora")) { _, index ->
-                        catalogueId = listOf("viprow", "korahlive", "livekora")[index]
-                        text = "Source: ${listOf("VIPRow", "KorahLive", "Livekora")[index]} ▾"
+                    .setItems(arrayOf("All public sources", "VIPRow", "KorahLive", "Livekora", "OpenLigaDB · results")) { _, index ->
+                        catalogueId = listOf("all", "viprow", "korahlive", "livekora", "openliga")[index]
+                        text = "Schedules: ${listOf("All public sources", "VIPRow", "KorahLive", "Livekora", "OpenLigaDB")[index]} ▾"
                         allFixtures = emptyList(); loadSchedule(silent = false)
                     }.show()
             }
@@ -206,9 +241,11 @@ class MainActivity : AppCompatActivity() {
         header.addView(top)
         val brand = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         top.addView(brand, lp(0, -2, 1f))
-        brand.addView(text("◉  SPORTSWAVE", 22f, white, true))
+        brand.addView(text("SportsWave", 24f, white, true))
         subtitle = text("Loading today's events…", 12f, muted).apply { setPadding(0, d(6), 0, 0) }
         brand.addView(subtitle)
+        health = text("", 11f, amber).apply { maxLines = 2; setPadding(0, d(5), 0, 0) }
+        header.addView(health)
         val refresh = text("↻", 26f, accent, true).apply {
             gravity = Gravity.CENTER; background = shape(surface2, 14)
             setOnClickListener { loadSchedule(silent = allFixtures.isNotEmpty()) }
@@ -222,7 +259,7 @@ class MainActivity : AppCompatActivity() {
             isSingleLine = true; imeOptions = EditorInfo.IME_ACTION_SEARCH
             background = shape(surface, 16); pad(this, 16, 11)
         }
-        header.addView(query, lp(-1, d(48)).apply { topMargin = d(14) })
+        header.addView(query, lp(-1, d(42)).apply { topMargin = d(9) })
         query.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, st: Int, c: Int, a: Int) {}
             override fun onTextChanged(s: CharSequence?, st: Int, b: Int, c: Int) { rebuild() }
@@ -237,17 +274,33 @@ class MainActivity : AppCompatActivity() {
 
         tabs = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(d(18), d(4), d(18), d(6)) }
         outer.addView(TextView(this).apply {
-            text = "Sort: Relevance"; setTextColor(accent); textSize = 13f
+            text = "Sort: World events first"; setTextColor(accent); textSize = 13f
             setPadding(d(20), d(8), d(20), d(8))
             setOnClickListener {
-                val modes = arrayOf("Relevance", "Kickoff", "League")
+                val modes = arrayOf("Relevance", "Kickoff", "League", "Favourites")
                 androidx.appcompat.app.AlertDialog.Builder(this@MainActivity)
                     .setTitle("Sort events")
                     .setItems(modes) { _, index ->
-                        sortMode = modes[index]; text = "Sort: $sortMode"; rebuild()
+                        favouritesOnly = modes[index] == "Favourites"
+                        if (!favouritesOnly) sortMode = modes[index]
+                        text = if (favouritesOnly) "Favourites only" else "Sort: $sortMode"; rebuild()
                     }.show()
             }
         })
+        val dateRow = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL; setPadding(d(16), 0, d(16), 0) }
+        val dateLabel = text("All dates ▾", 14f, white, true).apply { gravity = Gravity.CENTER }
+        fun updateDay() { dateLabel.text = selectedDay?.let { if (it == LocalDate.now()) "Today ▾" else it.toString() + " ▾" } ?: "All dates ▾"; rebuild() }
+        dateRow.addView(text("‹", 25f, accent).apply { gravity = Gravity.CENTER; contentDescription = "Previous day"; setOnClickListener { selectedDay = (selectedDay ?: LocalDate.now()).minusDays(1); updateDay() } }, lp(d(48), d(48)))
+        dateRow.addView(dateLabel, lp(0, d(48), 1f))
+        dateLabel.setOnClickListener {
+            androidx.appcompat.app.AlertDialog.Builder(this).setTitle("Schedule date")
+                .setItems(arrayOf("All dates", "Today", "Choose date")) { _, choice ->
+                    if (choice < 2) { selectedDay = if (choice == 0) null else LocalDate.now(); updateDay() }
+                    else { val day = selectedDay ?: LocalDate.now(); android.app.DatePickerDialog(this, { _, year, month, date -> selectedDay = LocalDate.of(year, month + 1, date); updateDay() }, day.year, day.monthValue - 1, day.dayOfMonth).show() }
+                }.show()
+        }
+        dateRow.addView(text("›", 25f, accent).apply { gravity = Gravity.CENTER; contentDescription = "Next day"; setOnClickListener { selectedDay = (selectedDay ?: LocalDate.now()).plusDays(1); updateDay() } }, lp(d(48), d(48)))
+        outer.addView(dateRow)
         outer.addView(tabs)
         renderTabs(0, 0, 0)
 
@@ -274,7 +327,11 @@ class MainActivity : AppCompatActivity() {
         outer.addView(bottom)
         bottomButton(bottom, "◉ Events") { listView.smoothScrollToPosition(0) }
         bottomButton(bottom, "Channels") { showChannels() }
-        bottomButton(bottom, "▶ HLS test") { openPlayer("https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8", "hls") }
+        bottomButton(bottom, "Sources") {
+            androidx.appcompat.app.AlertDialog.Builder(this).setTitle("Public source coverage")
+                .setMessage("VIPRow: published multi-sport event pages.\nLivekora / KorahLive: available published Arabic fixtures.\nOpenLigaDB: community football, hockey and darts matchdays and final scores (ODbL).\n\n$sourceStatus\n${loadError.orEmpty()}\n\nMissing events, scores and artwork remain unavailable. Scheduled times do not confirm a match is live. Player languages are shown only when published by the source.")
+                .setPositiveButton("Close", null).show()
+        }
     }
 
     private fun bottomButton(bar: LinearLayout, caption: String, fn: () -> Unit) {
@@ -306,7 +363,7 @@ class MainActivity : AppCompatActivity() {
         val labels = listOf("All" to all, "Live" to live, "Upcoming" to upcoming)
         labels.forEachIndexed { index, (label, count) ->
             val active = label == selectedFilter
-            val displayLabel = if (catalogueId == "livekora" && label == "Live") "NOW" else label.uppercase()
+            val displayLabel = if (label == "Live") "Now" else label
             val caption = if (allFixtures.isEmpty()) displayLabel else "$displayLabel  $count"
             val view = text(caption, 11f, if (active) bg else muted, true).apply {
                 gravity = Gravity.CENTER; background = shape(if (active) accent else surface, 12)
@@ -331,32 +388,57 @@ class MainActivity : AppCompatActivity() {
 
     @SuppressLint("SetJavaScriptEnabled")
     private fun loadSchedule(silent: Boolean) {
+        lastAttempt = System.currentTimeMillis()
         catalogueTask?.cancel(true)
         val seq = ++generation
+        previousFixtures = allFixtures
+        supplemental = emptyList(); sourceStatus = ""
         webLoader?.apply { disposeBrowser(this) }
         webLoader = null
         loading = true
         loadError = null
         loadedOk = false
         if (!silent || allFixtures.isEmpty()) {
-            allFixtures = emptyList()
+            allFixtures = ScheduleSnapshot.read(snapshotFile()).map { fixture(it) }
+            previousFixtures = allFixtures
+            lastUpdated = allFixtures.maxOfOrNull { it.receivedAt } ?: 0L
             swipe.isRefreshing = false
             listView.scrollToPosition(0)
         } else {
             swipe.isRefreshing = true
         }
         rebuild()
-        if (catalogueId != "viprow") {
-            val provider: CatalogueProvider = if (catalogueId == "livekora") LivekoraCatalogue() else KorahLiveCatalogue()
-            val sourceName = if (catalogueId == "livekora") "Livekora" else "KorahLive"
+        if (catalogueId == "all") {
+            val sport = selected.slug
+            catalogueTask = catalogueExecutor.submit {
+                val providers = listOf(OpenLigaCatalogue(), LivekoraCatalogue(), KorahLiveCatalogue())
+                val statuses = mutableListOf<String>()
+                providers.forEach { provider ->
+                    if (Thread.currentThread().isInterrupted) return@submit
+                    val result = runCatching { provider.load(sport) }
+                    statuses += "${provider.id}: " + if (result.isSuccess) "${result.getOrThrow().size} events" else "unavailable"
+                    runOnUiThread {
+                        if (generation != seq || isFinishing || isDestroyed) return@runOnUiThread
+                        val incoming = if (result.isFailure) previousFixtures.filter { it.sourceId == provider.id }
+                            else result.getOrDefault(emptyList()).map { fixture(it) }
+                        supplemental = (supplemental + incoming).distinctBy { it.id }
+                        allFixtures = (allFixtures.filter { it.sourceId == "viprow" } + supplemental).distinctBy { it.sourceId to it.id }
+                        sourceStatus = statuses.joinToString(" · ")
+                        saveSnapshot()
+                        rebuild()
+                    }
+                }
+            }
+        }
+        if (catalogueId != "viprow" && catalogueId != "all") {
+            val provider: CatalogueProvider = when (catalogueId) { "livekora" -> LivekoraCatalogue(); "openliga" -> OpenLigaCatalogue(); else -> KorahLiveCatalogue() }
+            val sourceName = when (catalogueId) { "livekora" -> "Livekora"; "openliga" -> "OpenLigaDB"; else -> "KorahLive" }
             val sport = selected.slug
             catalogueTask = catalogueExecutor.submit {
                 val result = runCatching { provider.load(sport) }
                 runOnUiThread {
                     if (generation != seq || isFinishing || isDestroyed) return@runOnUiThread
-                    allFixtures = result.getOrDefault(emptyList()).map {
-                        Fixture(it.id, it.name, it.league, it.start, it.end, it.sport, it.url)
-                    }
+                    allFixtures = if (result.isFailure) previousFixtures else result.getOrDefault(emptyList()).map { fixture(it) }
                     loadError = if (result.isFailure) "$sourceName unavailable. Pull down to retry."
                         else if (allFixtures.isEmpty() && provider.id == "livekora") "Livekora currently publishes no ${selected.name.lowercase()} matches. Published channels are available in Channels."
                         else if (allFixtures.isEmpty()) "$sourceName lists no compatible ${selected.name.lowercase()} events. Channel posts are not matches."
@@ -369,8 +451,12 @@ class MainActivity : AppCompatActivity() {
         val page = "https://viprow.im/sports/${selected.slug}/"
         val sportSlug = selected.slug
         val browser = WebView(this)
+        browser.isFocusable = false
+        browser.isFocusableInTouchMode = false
+        browser.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
         webLoader = browser
         browser.settings.javaScriptEnabled = true
+        browser.settings.cacheMode = android.webkit.WebSettings.LOAD_NO_CACHE
         browser.settings.domStorageEnabled = true
         browser.settings.allowFileAccess = false
         browser.settings.allowContentAccess = false
@@ -418,7 +504,7 @@ class MainActivity : AppCompatActivity() {
                                 obj.optString("league", "Other competition"), obj.optLong("start"),
                                 obj.optLong("end"), sportSlug, obj.optString("url")
                             )
-                        }.sortedBy { it.start }
+                        }.let { (it + supplemental).distinctBy { event -> event.id } }.sortedBy { it.start }
                         lastUpdated = System.currentTimeMillis()
                         loadedOk = true
                     } catch (_: Exception) {
@@ -488,15 +574,23 @@ class MainActivity : AppCompatActivity() {
     private fun finishLoad() {
         loading = false
         swipe.isRefreshing = false
+        saveSnapshot()
         rebuild()
     }
 
     private fun nowSec() = System.currentTimeMillis() / 1000L
 
+    private fun snapshotFile() = java.io.File(filesDir, "schedule-${catalogueId}-${selected.slug}.json")
+    private fun saveSnapshot() {
+        if (allFixtures.isNotEmpty()) ScheduleSnapshot.save(snapshotFile(), allFixtures.map { it.event() })
+    }
+
     private fun phase(f: Fixture, now: Long): Phase = when {
         f.start <= 0L -> Phase.UPCOMING
         f.end in 1 until now -> Phase.ENDED
         f.id.startsWith("livekora|") && now - f.start >= 4 * 3600 -> Phase.ENDED
+        f.sourceId == "openliga" && f.start <= now -> Phase.UNKNOWN
+        f.end == 0L && now - f.start >= 6 * 3600 -> Phase.UNKNOWN
         f.start <= now -> Phase.LIVE
         f.start - now <= SOON_WINDOW -> Phase.SOON
         else -> Phase.UPCOMING
@@ -526,13 +620,22 @@ class MainActivity : AppCompatActivity() {
             else -> SimpleDateFormat("EEE d MMM", Locale.getDefault()).format(Date(f.start * 1000L))
         }
         Phase.ENDED -> "Ended"
+        Phase.UNKNOWN -> "Status unavailable"
     }
 
     private fun rebuild() {
         if (!::listView.isInitialized) return
         val now = nowSec()
         val search = query.text.toString().trim()
-        val matched = allFixtures.filter { it.name.contains(search, true) || it.league.contains(search, true) }
+        if (mergedInput !== allFixtures) {
+            val merged = EventAggregation.merge(allFixtures.map { it.event() })
+            mergedFixtures = merged.map { group -> fixture(group.event).copy(memberIds = group.members.map { it.catalogueId + "|" + it.id }.toSet()) }
+            mergedInput = allFixtures
+        }
+        val displayFixtures = mergedFixtures
+        uniqueCount = displayFixtures.size
+        val matched = displayFixtures.filter { (!favouritesOnly || favouriteKey(it) in favouriteIds) && (it.name.contains(search, true) || it.league.contains(search, true)) &&
+            (selectedDay == null || (it.start > 0 && Instant.ofEpochSecond(it.start).atZone(ZoneId.systemDefault()).toLocalDate() == selectedDay)) }
         val phases = matched.associate { it.id to phase(it, now) }
         val ordering = when (sortMode) {
             "League" -> compareBy<Fixture> { it.league.lowercase(Locale.ROOT) }.thenBy { it.start }
@@ -543,7 +646,7 @@ class MainActivity : AppCompatActivity() {
                     search.isNotBlank() && it.name.contains(search, true) -> 1
                     else -> 2
                 }
-            }.thenBy { if (it.url.isNotBlank()) 0 else 1 }
+            }.thenBy { CompetitionPriority.tier(it.league) }.thenBy { if (it.url.isNotBlank()) 0 else 1 }
                 .thenBy { kotlin.math.abs(it.start - now) }
         }.thenBy { it.id }
         fun ofPhase(vararg wanted: Phase) = matched.filter { phases[it.id] in wanted }.sortedWith(ordering)
@@ -555,8 +658,11 @@ class MainActivity : AppCompatActivity() {
         val rows = mutableListOf<Row>()
         fun section(title: String, list: List<Fixture>, live: Boolean = false) {
             if (list.isEmpty()) return
-            rows += Row.Header(if (catalogueId == "livekora" && live) "Scheduled now (status unverified)" else if (catalogueId == "livekora" && title == "Finished") "Earlier fixtures" else title, list.size, live)
-            list.forEach { rows += Row.Match(it) }
+            rows += Row.Header(if (live) "Scheduled now · status unverified" else if (catalogueId == "livekora" && title == "Finished") "Earlier fixtures" else title, list.size, live)
+            list.groupBy { it.league }.forEach { (league, events) ->
+                rows += Row.Header(league, events.size, false)
+                events.forEach { rows += Row.Match(it) }
+            }
         }
         fun byDay(list: List<Fixture>) =
             list.groupBy { dayLabel(it.start) }.forEach { (label, items) -> section(label, items) }
@@ -568,7 +674,7 @@ class MainActivity : AppCompatActivity() {
                 when (selectedFilter) {
                     "Live" -> section("Live now", liveNow, live = true)
                     "Upcoming" -> byDay(upcomingAll)
-                    else -> { section("Live now", liveNow, live = true); byDay(laterOnly); section("Finished", ended) }
+                    else -> { section("Live now", liveNow, live = true); byDay(laterOnly); section("Status unavailable", ofPhase(Phase.UNKNOWN)); section("Finished", ended) }
                 }
                 if (rows.isEmpty()) rows += Row.Message(
                     when {
@@ -580,27 +686,68 @@ class MainActivity : AppCompatActivity() {
             }
         }
         adapter.submit(rows)
+        health.text = when {
+            loading -> "Refreshing schedules…"
+            loadError != null -> "Some data unavailable · saved results may be shown"
+            sourceStatus.contains("unavailable") -> "Some sources unavailable · open Sources for details"
+            else -> "Long-press to favourite · scores may be delayed"
+        }
         renderTabs(matched.size, liveNow.size, upcomingAll.size)
         subtitle.text = when {
             loading && allFixtures.isEmpty() -> "Loading ${selected.name.lowercase()} events…"
             allFixtures.isEmpty() -> "No schedule loaded"
             else -> {
                 val updated = if (lastUpdated > 0) " · updated ${timeFormat.format(Date(lastUpdated))}" else ""
-                if (catalogueId == "livekora") "${allFixtures.size} scheduled events · status unverified$updated"
-                else "${liveNow.size} live · ${allFixtures.size} events$updated"
+                if (favouritesOnly || search.isNotBlank()) "${matched.size} shown · ${uniqueCount} total$updated"
+                else if (catalogueId == "livekora") "${allFixtures.size} scheduled events · status unverified$updated"
+                else if (catalogueId == "openliga") "OpenLigaDB · community results · ODbL$updated"
+                else "${liveNow.size} scheduled now · ${uniqueCount} matches$updated"
             }
         }
     }
 
+    private fun favouriteKey(f: Fixture) = "${f.sport}|${EventMatching.teamKey(f.teams?.first ?: f.name, f.sport)}|${EventMatching.teamKey(f.teams?.second.orEmpty(), f.sport)}|${EventMatching.leagueKey(f.league, f.sport)}|${(f.start + 300) / 1800}"
+    private fun toggleFavourite(f: Fixture) {
+        val key = favouriteKey(f)
+        val added = if (key in favouriteIds) { favouriteIds.remove(key); false } else { favouriteIds.add(key); true }
+        getPreferences(MODE_PRIVATE).edit().putStringSet("favourite_matches", favouriteIds.toSet()).apply()
+        android.widget.Toast.makeText(this, if (added) "Added to favourites" else "Removed from favourites", android.widget.Toast.LENGTH_SHORT).show()
+        rebuild()
+    }
+    private fun matchDetails(f: Fixture) {
+        val score = if (f.homeScore != null && f.awayScore != null) "Reported score: ${f.homeScore}–${f.awayScore}" else "Score unavailable"
+        val age = ((System.currentTimeMillis() - f.receivedAt).coerceAtLeast(0) / 60_000)
+        val provenance = allFixtures.filter { (it.id == f.id && it.sourceId == f.sourceId) || (it.sourceId + "|" + it.id) in f.memberIds }.map { it.sourceId }.distinct().joinToString(", ")
+        androidx.appcompat.app.AlertDialog.Builder(this).setTitle(f.name)
+            .setMessage("${f.league}\n${dayLabel(f.start)} · ${if (f.start > 0) timeFormat.format(Date(f.start * 1000)) else "Time TBC"}\n\n$score\nSource: $provenance\nRetrieved ${age}m ago${if (age > 10) " · stale" else ""}\nMatch clocks are not verified. Commentary language is shown only when published.")
+            .setPositiveButton("Close", null)
+            .setNeutralButton(if (favouriteKey(f) in favouriteIds) "Remove favourite" else "Favourite") { _, _ -> toggleFavourite(f) }.show()
+    }
+
     private fun open(f: Fixture) {
-        if (f.url.isBlank()) { subtitle.text = "No published event link available"; return }
-        val source = sources[f.id]
-        startActivity(Intent(this, ResolveActivity::class.java).apply {
-            putExtra("event_id", f.id)
-            putExtra("event_name", f.name)
-            putExtra("event_url", f.url)
-            source?.let { putExtra("native_url", it.url); putExtra("native_type", it.type) }
-        })
+        val choices = allFixtures.filter { it.url.isNotBlank() && ((it.id == f.id && it.sourceId == f.sourceId) || (it.sourceId + "|" + it.id) in f.memberIds) }.distinctBy { it.url }
+        if (choices.isEmpty()) {
+            androidx.appcompat.app.AlertDialog.Builder(this).setTitle(f.name)
+                .setMessage("${f.league}\n${dayLabel(f.start)}\n\n${f.sourceId} · fetched ${timeFormat.format(Date(f.receivedAt))}\nNo published player is linked to this fixture. Scores may be delayed. Long-press a match to favourite it.")
+                .setPositiveButton("Match details") { _, _ -> matchDetails(f) }
+                .setNeutralButton("Browse channels") { _, _ -> showChannels() }
+                .setNegativeButton("Close", null).show()
+            return
+        }
+        val preferred = getPreferences(MODE_PRIVATE).getString("preferred_player_source", "viprow")
+        val ordered = choices.sortedBy { if (it.url.contains("viprow.im") == (preferred == "viprow")) 0 else 1 }
+        val labels = ordered.map { if (it.url.contains("viprow.im")) "VIPRow · choose server" else "Arabic provider · choose server" }
+        androidx.appcompat.app.AlertDialog.Builder(this).setTitle("Player source · ${f.name}")
+            .setItems(labels.toTypedArray()) { _, index ->
+                val choice = ordered[index]
+                getPreferences(MODE_PRIVATE).edit().putString("preferred_player_source", if (choice.url.contains("viprow.im")) "viprow" else "arabic").apply()
+                val source = sources[choice.id]
+                startActivity(Intent(this, ResolveActivity::class.java).apply {
+                    putExtra("event_id", choice.id); putExtra("event_name", choice.name); putExtra("event_url", choice.url)
+                    source?.let { putExtra("native_url", it.url); putExtra("native_type", it.type) }
+                })
+            }.setNeutralButton("Match details") { _, _ -> matchDetails(f) }
+            .setNegativeButton("Cancel", null).show()
     }
 
     private fun openPlayer(url: String, type: String) {
@@ -666,7 +813,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         fun bind(h: Row.Header) {
-            title.text = h.title.uppercase()
+            title.text = h.title
             title.setTextColor(if (h.live) accent else white)
             count.text = h.count.toString()
             dot.visibility = if (h.live) View.VISIBLE else View.GONE
@@ -676,136 +823,53 @@ class MainActivity : AppCompatActivity() {
 
     private inner class MatchHolder : RecyclerView.ViewHolder(LinearLayout(this@MainActivity)) {
         private val card = itemView as LinearLayout
-        private val league = text("", 10.5f, muted, true).apply {
-            isSingleLine = true; ellipsize = TextUtils.TruncateAt.END; letterSpacing = .06f
-        }
-        private val pill = text("", 9.5f, bg, true).apply {
-            setPadding(d(9), d(4), d(9), d(4)); letterSpacing = .08f
-        }
-        private val homeBadge = ImageView(this@MainActivity).apply { scaleType = ImageView.ScaleType.FIT_CENTER }
-        private val awayBadge = ImageView(this@MainActivity).apply { scaleType = ImageView.ScaleType.FIT_CENTER }
-        private val homeName = teamText()
-        private val awayName = teamText()
-        private val pairBox = LinearLayout(this@MainActivity).apply { orientation = LinearLayout.VERTICAL }
-        private val single = LinearLayout(this@MainActivity).apply {
-            orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
-        }
-        private val singleIcon = text("", 17f).apply { gravity = Gravity.CENTER; background = oval(surface2) }
-        private val singleTitle = text("", 15.5f, white, true).apply {
-            maxLines = 2; ellipsize = TextUtils.TruncateAt.END
-        }
-        private val timeBig = text("", 17f, white, true).apply { gravity = Gravity.CENTER }
-        private val timeSmall = text("", 11f, muted, true).apply { gravity = Gravity.CENTER }
-        private val action = text("", 11.5f, bg, true).apply { gravity = Gravity.CENTER; letterSpacing = .05f }
+        private val time = text("", 12f, muted).apply { gravity = Gravity.CENTER; maxLines = 2 }
+        private val home = text("", 14f, white)
+        private val away = text("", 14f, white)
+        private val homeBadge = ImageView(this@MainActivity)
+        private val awayBadge = ImageView(this@MainActivity)
+        private val score = text("", 16f, white, true).apply { gravity = Gravity.CENTER; setTypeface(Typeface.MONOSPACE, Typeface.BOLD) }
+        private val play = text("›", 23f, accent).apply { gravity = Gravity.CENTER }
         private var fixture: Fixture? = null
-
-        private fun teamText() = text("", 15f, white, true).apply {
-            isSingleLine = true; ellipsize = TextUtils.TruncateAt.END
-        }
-
-        private fun teamRow(badge: ImageView, name: TextView) = LinearLayout(this@MainActivity).apply {
-            orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
-            addView(badge, lp(d(28), d(28)).apply { marginEnd = d(11) })
-            addView(name, lp(0, -2, 1f))
-        }
-
         init {
-            card.orientation = LinearLayout.VERTICAL
-            card.layoutParams = RecyclerView.LayoutParams(-1, -2).apply { bottomMargin = d(10) }
-            card.setPadding(d(15), d(13), d(15), d(14))
-
-            val top = LinearLayout(this@MainActivity).apply {
-                orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
+            card.orientation = LinearLayout.HORIZONTAL; card.gravity = Gravity.CENTER_VERTICAL
+            card.layoutParams = RecyclerView.LayoutParams(-1, d(80)).apply { bottomMargin = d(1) }
+            card.setPadding(d(8), d(8), d(8), d(8)); card.background = shape(surface, 3)
+            card.addView(time, lp(d(54), -1))
+            val teams = LinearLayout(this@MainActivity).apply { orientation = LinearLayout.VERTICAL }
+            fun teamRow(badge: ImageView, name: TextView) = LinearLayout(this@MainActivity).apply {
+                gravity = Gravity.CENTER_VERTICAL
+                badge.scaleType = ImageView.ScaleType.FIT_CENTER
+                addView(badge, lp(d(22), d(22)).apply { marginEnd = d(9) })
+                name.isSingleLine = true; name.ellipsize = TextUtils.TruncateAt.END
+                addView(name, lp(0, -2, 1f))
             }
-            top.addView(league, lp(0, -2, 1f).apply { marginEnd = d(8) })
-            top.addView(pill, lp(-2, -2))
-            card.addView(top)
-
-            val body = LinearLayout(this@MainActivity).apply {
-                orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
-            }
-            card.addView(body, lp(-1, -2).apply { topMargin = d(13) })
-            val left = FrameLayout(this@MainActivity)
-            body.addView(left, lp(0, -2, 1f))
-            pairBox.addView(teamRow(homeBadge, homeName), lp(-1, -2))
-            pairBox.addView(teamRow(awayBadge, awayName), lp(-1, -2).apply { topMargin = d(9) })
-            left.addView(pairBox, FrameLayout.LayoutParams(-1, -2))
-            single.addView(singleIcon, lp(d(40), d(40)).apply { marginEnd = d(12) })
-            single.addView(singleTitle, lp(0, -2, 1f))
-            left.addView(single, FrameLayout.LayoutParams(-1, -2))
-
-            body.addView(View(this@MainActivity).apply { setBackgroundColor(divider) },
-                lp(d(1), d(46)).apply { marginStart = d(12); marginEnd = d(12) })
-            val timeCol = LinearLayout(this@MainActivity).apply {
-                orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER
-            }
-            timeCol.addView(timeBig, lp(-2, -2))
-            timeCol.addView(timeSmall, lp(-2, -2).apply { topMargin = d(5) })
-            body.addView(timeCol, lp(d(76), -2))
-
-            card.addView(action, lp(-1, d(38)).apply { topMargin = d(13) })
+            teams.addView(teamRow(homeBadge, home), lp(-1, d(30)))
+            teams.addView(teamRow(awayBadge, away), lp(-1, d(30)))
+            card.addView(teams, lp(0, -2, 1f))
+            card.addView(score, lp(d(34), -1)); card.addView(play, lp(d(24), -1))
+            card.isFocusable = true
+            card.setOnLongClickListener { fixture?.let { toggleFavourite(it) }; true }
             card.setOnClickListener { fixture?.let { open(it) } }
-            action.setOnClickListener { fixture?.let { open(it) } }
         }
-
         fun bind(f: Fixture, now: Long) {
             fixture = f
-            val p = phase(f, now)
-            league.text = f.league.uppercase()
-            val teams = f.teams
-            if (teams != null) {
-                pairBox.visibility = View.VISIBLE; single.visibility = View.GONE
-                homeName.text = teams.first; awayName.text = teams.second
-                TeamBadges.bind(homeBadge, teams.first, f.sport)
-                TeamBadges.bind(awayBadge, teams.second, f.sport)
-            } else {
-                pairBox.visibility = View.GONE; single.visibility = View.VISIBLE
-                singleIcon.text = sports.firstOrNull { it.slug == f.sport }?.emoji ?: "🏆"
-                singleTitle.text = f.name
+            val pair = f.teams
+            home.text = pair?.first ?: f.name; away.text = pair?.second ?: "Event"
+            TeamBadges.bind(homeBadge, pair?.first ?: f.name, f.sport, f.homeLogo)
+            TeamBadges.bind(awayBadge, pair?.second ?: "", f.sport, f.awayLogo)
+            val ended = phase(f, now) == Phase.ENDED
+            time.text = when {
+                f.id.startsWith("openliga|") && ended -> "FT"
+                f.start > 0 -> timeFormat.format(Date(f.start * 1000L))
+                else -> "TBC"
             }
-            timeBig.text = if (f.start > 0) timeFormat.format(Date(f.start * 1000L)) else "--:--"
-            timeSmall.text = if (f.id.startsWith("livekora|") && p in setOf(Phase.LIVE, Phase.ENDED))
-                "Status unverified" else relative(f, p, now)
-            card.alpha = if (p == Phase.ENDED) .72f else 1f
-
-            when (p) {
-                Phase.LIVE -> {
-                    pill.text = if (f.id.startsWith("livekora|")) "SCHEDULED" else "● LIVE"
-                    pill.setTextColor(bg); pill.background = shape(accent, 20); pulse(pill)
-                    card.background = shape(surface, 18, accentDim); timeSmall.setTextColor(accent)
-                }
-                Phase.SOON -> {
-                    pill.clearAnimation()
-                    pill.text = "STARTING SOON"; pill.setTextColor(amber); pill.background = shape(amberDim, 20)
-                    card.background = shape(surface, 18); timeSmall.setTextColor(amber)
-                }
-                Phase.UPCOMING -> {
-                    pill.clearAnimation()
-                    pill.text = "UPCOMING"; pill.setTextColor(muted); pill.background = shape(surface2, 20)
-                    card.background = shape(surface, 18); timeSmall.setTextColor(muted)
-                }
-                Phase.ENDED -> {
-                    pill.clearAnimation()
-                    pill.text = if (f.id.startsWith("livekora|")) "EARLIER" else "ENDED"
-                    pill.setTextColor(muted); pill.background = shape(surface2, 20)
-                    card.background = shape(surfaceDim, 18); timeSmall.setTextColor(muted)
-                }
-            }
-
-            val source = sources[f.id]
-            val (caption, filled) = when {
-                f.url.isBlank() -> "PLAYER LINK UNAVAILABLE" to false
-                source != null -> "PLAY ${source.type.uppercase()}  ▶" to true
-                f.id.startsWith("livekora|") -> "OPEN CHANNEL  ▶" to true
-                p == Phase.LIVE || p == Phase.SOON -> "WATCH LIVE  ▶" to true
-                p == Phase.UPCOMING -> "CHOOSE PLAYER" to false
-                else -> "VIEW PLAYERS" to false
-            }
-            action.text = caption
-            action.isEnabled = f.url.isNotBlank()
-            card.isEnabled = f.url.isNotBlank()
-            action.setTextColor(if (filled) bg else accent)
-            action.background = shape(if (filled) accent else surface2, 11)
+            score.text = if (f.homeScore != null && f.awayScore != null) "${f.homeScore}\n${f.awayScore}" else "–\n–"
+            play.text = if (favouriteKey(f) in favouriteIds) "★" else if (f.url.isBlank()) "ⓘ" else "›"
+            val stale = f.receivedAt <= 0 || System.currentTimeMillis() - f.receivedAt > 10 * 60_000L
+            score.setTextColor(if (stale && f.homeScore != null) amber else white)
+            score.contentDescription = if (f.homeScore == null) "Score unavailable" else "Reported score ${f.homeScore} to ${f.awayScore}" + if (stale) ", stale" else ""
+            card.contentDescription = "${f.name}, ${f.league}, ${time.text}. " + if (f.url.isBlank()) "Match details" else "Choose player"
         }
     }
 
@@ -820,7 +884,7 @@ class MainActivity : AppCompatActivity() {
                 View(this@MainActivity).apply { background = shape(surface2, 6) },
                 lp(if (width < 0) width else d(width), d(height)).apply { topMargin = d(top) }
             )
-            bar(120, 10, 0); bar(210, 18, 16); bar(170, 18, 12); bar(-1, 38, 16)
+            bar(210, 16, 0); bar(170, 16, 12)
         }
 
         fun bind() = pulse(itemView)

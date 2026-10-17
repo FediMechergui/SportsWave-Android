@@ -1,4 +1,22 @@
-# Latest verification - 2026-10-14
+# Beta.3 verification - 2026-10-17
+
+- 38 Android unit tests and 3 Python importer tests pass. Signed release assembly, vital lint, R8 and 16 KB APK zip alignment pass using installed Gradle 8.11.1; the externally changed wrapper remains outside these checks.
+- The APK signature matches the existing SportsWave release certificate. The tested preview retained beta.2 identity; the publication build increments to 1.0.0-beta.3, versionCode 4, and receives separate artifact checks.
+- Resolver metadata WebViews are removed and destroyed after bounded discovery, network errors, HTTP errors and initial-load timeouts. Stale callbacks cannot restart a disposed scan. HTTP failures now show the actual status rather than scanning the error document.
+- README roadmap entries now distinguish completed preview features from remaining work.
+- Installed the final signed preview on SportsWave_API35, port 5558, without touching the Cartoony emulator on port 5556. The home screen loaded 87 OpenLigaDB fixtures and available published crests; source failures preserved those records. After loading finished, the UI hierarchy contained zero metadata WebViews. Match details reported the source, retrieval age and unavailable score, without implying a linked broadcast. This run does not newly verify provider video playback. [Home](docs/audit/sportswave-home-2026-10-17.png), [match details](docs/audit/sportswave-details-2026-10-17.png).
+
+# Interface preview verification - 2026-10-14 (unreleased)
+
+- 30 offline unit tests pass, including competition priority, distinct women's/youth identities, UTC fixture parsing, final vs provisional score handling and malformed-record isolation.
+- Signed Android 15 preview installed as an update on the separate SportsWave emulator. The aggregated Football view loaded 268 records: 195 VIPRow and 73 OpenLigaDB. Availability can change between requests.
+- Compact rows and competition headers rendered; Today filtering displayed 91 records in that check. The source chooser opened the actual VIPRow resolver and exposed two published TodayStreams server choices, with unknown commentary language correctly labeled.
+- Source coverage reported Livekora and KorahLive as unavailable during that emulator check while preserving other sources' results. OpenLigaDB-only selection loaded records separately.
+- Subsequent preview fixes replace the old brand/live wording, exclude metadata-loader WebViews from the accessibility tree, and allow provisional scores only from published goal records. These are covered by the final build/unit checks; the earlier screenshots precede those final textual/accessibility refinements.
+- Final signed preview build and vital lint pass; signature matches the existing release identity and 16 KB zip alignment passes. Installed final APK again displayed 268 combined events with the corrected “scheduled now” wording and clean native accessibility labels. [Final screen](docs/audit/interface-preview-api35.png). Cold startup was slow on this memory-constrained emulator; startup performance is not certified on physical hardware.
+- Public data covers selected football, hockey and darts competitions, not comprehensive verified multi-sport live scores. Raster logos are attempted from published reviewed hosts; unsupported/missing artwork retains initials. See [coverage](docs/PUBLIC_DATA.md).
+
+# Published beta.2 verification - 2026-10-14
 
 Version 1.0.0-beta.2, versionCode 3. The signed, minified release APK was installed directly in a dedicated SportsWave_API35 Android 15 emulator (emulator-5556), separate from the emulator used by another agent.
 

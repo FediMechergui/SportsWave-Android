@@ -27,12 +27,14 @@ import java.util.concurrent.Executors
  * API calls are throttled to stay inside the free tier.
  */
 object TeamBadges {
-    private const val DEFAULT_KEY = "3"
+    private const val DEFAULT_KEY = "123"
     private const val MISS_TTL_MS = 7L * 24 * 3600 * 1000
     private const val MIN_GAP_MS = 2100L
     private val MISS = Any()
     private val main = Handler(Looper.getMainLooper())
-    private val memory = HashMap<String, Any>()
+    private val memory = object : LinkedHashMap<String, Any>(128, .75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Any>?) = size > 128
+    }
     private val inFlight = HashSet<String>()
     private val waiting = HashMap<String, MutableList<ImageView>>()
     private val executor = Executors.newSingleThreadExecutor()
@@ -50,11 +52,14 @@ object TeamBadges {
         }.getOrNull() ?: DEFAULT_KEY
     }
 
-    fun bind(view: ImageView, team: String, sport: String) {
-        val key = normalize(team)
+    fun bind(view: ImageView, team: String, sport: String, publishedLogo: String = "") {
+        val lookup = normalize(team)
+        val key = "$sport|$lookup|$publishedLogo"
         view.tag = key
         view.setImageDrawable(InitialsDrawable(initials(team), colorFor(key)))
-        if (key.length < 2 || sport in individualSports) return
+        if (lookup.length < 2 || (sport in individualSports && publishedLogo.isBlank())) return
+        // Public demo API coverage is restricted. Do not queue hundreds of unsupported lookups.
+        if (publishedLogo.isBlank() && apiKey == DEFAULT_KEY) return
         synchronized(memory) {
             when (val cached = memory[key]) {
                 is Bitmap -> { view.setImageBitmap(cached); return }
@@ -67,8 +72,8 @@ object TeamBadges {
         val sportName = sportFor(sport)
         executor.execute {
             val hash = sha1(key)
-            val png = File(folder, "$hash.png")
-            val miss = File(folder, "$hash.miss")
+            val png = File(folder, "$hash-v2.png")
+            val miss = File(folder, "$hash-v2.miss")
             var bitmap: Bitmap? = if (png.exists()) BitmapFactory.decodeFile(png.path) else null
             val missFresh = miss.exists() && System.currentTimeMillis() - miss.lastModified() < MISS_TTL_MS
             if (bitmap == null && !missFresh) {
@@ -78,9 +83,11 @@ object TeamBadges {
                     synchronized(memory) { inFlight.remove(key); waiting.remove(key) }
                     return@execute
                 }
-                val bytes = fetchBadge(key, sportName)
-                bitmap = bytes?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
-                runCatching { if (bitmap != null && bytes != null) png.writeBytes(bytes) else miss.writeText("") }
+                val bytes = if (publishedLogo.isNotBlank()) {
+                    if (UrlPolicy.allowsResource(publishedLogo, listOf("i.imgur.com", "upload.wikimedia.org"))) get(publishedLogo) else null
+                } else fetchBadge(lookup, sportName)
+                bitmap = bytes?.let { decode(it) }
+                runCatching { if (bitmap != null) png.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) } else miss.writeText("") }
             }
             val views: List<ImageView>
             synchronized(memory) {
@@ -93,15 +100,33 @@ object TeamBadges {
         }
     }
 
-    /** Strips youth / women / reserve suffixes so "Arsenal U19" and "Arsenal W" share one crest. */
+    private fun decode(bytes: ByteArray): Bitmap? = runCatching {
+        if (String(bytes.take(512).toByteArray(), Charsets.UTF_8).contains("<svg")) {
+            val source = bytes.toString(Charsets.UTF_8)
+            // No external entities, nested documents or remote SVG resources.
+            require(!Regex("<!DOCTYPE|<!ENTITY|<image|<script", RegexOption.IGNORE_CASE).containsMatchIn(source))
+            require(Regex("<use\\b[^>]*", RegexOption.IGNORE_CASE).findAll(source).all { tag ->
+                Regex("(?:href|xlink:href)\\s*=\\s*['\"]([^'\"]+)", RegexOption.IGNORE_CASE)
+                    .find(tag.value)?.groupValues?.get(1)?.startsWith("#") == true
+            })
+            val svg = com.caverock.androidsvg.SVG.getFromString(source)
+            svg.documentWidth = 96f; svg.documentHeight = 96f
+            Bitmap.createBitmap(96, 96, Bitmap.Config.ARGB_8888).also { svg.renderToCanvas(Canvas(it)) }
+        } else {
+            val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
+            require(options.outWidth in 1..16384 && options.outHeight in 1..16384)
+            options.inJustDecodeBounds = false
+            while (options.outWidth / options.inSampleSize.coerceAtLeast(1) > 192 || options.outHeight / options.inSampleSize.coerceAtLeast(1) > 192)
+                options.inSampleSize = options.inSampleSize.coerceAtLeast(1) * 2
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
+        }
+    }.getOrNull()
+
+    /** Keeps youth, women's and reserve identities distinct. */
     fun normalize(name: String): String {
         // VIPRow appends flag emoji to names; drop emoji/symbols so lookups and initials use letters only.
         var n = name.replace(Regex("[\\p{So}\\p{Cs}\\x{FE0F}\\x{200D}]+"), " ").replace(Regex("\\s+"), " ").trim()
-        repeat(2) {
-            n = n.replace(Regex("\\s*\\((?:W|Women|Reserves?|Youth|II|B)\\)$", RegexOption.IGNORE_CASE), "")
-                .replace(Regex("\\s+(?:U\\d{2}|W|Women|Reserves?|II|B|Youth)$"), "")
-                .trim()
-        }
         return n
     }
 
@@ -138,8 +163,8 @@ object TeamBadges {
         var pick: JSONObject? = null
         for (i in 0 until teams.length()) {
             val candidate = teams.optJSONObject(i) ?: continue
-            if (pick == null) pick = candidate
-            if (sportName.isNotEmpty() && candidate.optString("strSport").equals(sportName, true)) { pick = candidate; break }
+            if (EventMatching.normalize(candidate.optString("strTeam")) == EventMatching.normalize(team) &&
+                sportName.isNotEmpty() && candidate.optString("strSport").equals(sportName, true)) { pick = candidate; break }
         }
         val chosen = pick ?: return null
         if (sportName.isNotEmpty() && !chosen.optString("strSport").equals(sportName, true)) return null
@@ -152,9 +177,20 @@ object TeamBadges {
         val connection = URL(url).openConnection() as HttpURLConnection
         connection.connectTimeout = 8000
         connection.readTimeout = 8000
+        connection.instanceFollowRedirects = false
         connection.setRequestProperty("User-Agent", "SportsWave/1.0 (Android)")
         try {
-            if (connection.responseCode == 200) connection.inputStream.use { it.readBytes() } else null
+            if (connection.responseCode == 200) connection.inputStream.use {
+                val output = java.io.ByteArrayOutputStream()
+                val buffer = ByteArray(8192)
+                while (output.size() <= 1_000_000) {
+                    val count = it.read(buffer)
+                    if (count < 0) break
+                    output.write(buffer, 0, count)
+                }
+                val bytes = output.toByteArray()
+                bytes.takeIf { data -> data.size <= 1_000_000 }
+            } else null
         } finally { connection.disconnect() }
     }.getOrNull()
 

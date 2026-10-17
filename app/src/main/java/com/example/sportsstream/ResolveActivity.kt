@@ -28,6 +28,7 @@ class ResolveActivity : AppCompatActivity() {
     private lateinit var status: TextView
     private val languages = mutableMapOf<String, String>()
     private val discovered = linkedMapOf<String, Pair<ProviderRule, String>>()
+    private var lastPlayers: Map<String, Pair<ProviderRule, String>> = emptyMap()
     private var scanningStarted = false
     private var attempts = 0
     private val maxAttempts = 8
@@ -100,8 +101,12 @@ class ResolveActivity : AppCompatActivity() {
 
         // Invisible view reads the ordinary public event links only.
         val browser = WebView(this)
+        browser.isFocusable = false
+        browser.isFocusableInTouchMode = false
+        browser.importantForAccessibility = android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
         page = browser
         browser.settings.javaScriptEnabled = true
+        browser.settings.cacheMode = android.webkit.WebSettings.LOAD_NO_CACHE
         browser.settings.domStorageEnabled = true
         browser.settings.allowFileAccess = false
         browser.settings.allowContentAccess = false
@@ -117,10 +122,19 @@ class ResolveActivity : AppCompatActivity() {
                 else android.webkit.WebResourceResponse("text/plain", "UTF-8", java.io.ByteArrayInputStream(ByteArray(0)))
 
             override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
-                if (request.isForMainFrame) status.text = "Event page unavailable. Try another match."
+                if (page === view && request.isForMainFrame) {
+                    status.text = "Event page unavailable. Try another match."
+                    view.post { disposeMetadata(view) }
+                }
+            }
+            override fun onReceivedHttpError(view: WebView, request: WebResourceRequest, response: android.webkit.WebResourceResponse) {
+                if (page === view && request.isForMainFrame) {
+                    status.text = "Event page returned HTTP ${response.statusCode}. Return and retry."
+                    view.post { disposeMetadata(view) }
+                }
             }
             override fun onPageFinished(view: WebView, url: String) {
-                if (safeEventUrl(url) && !scanningStarted) {
+                if (page === view && safeEventUrl(url) && !scanningStarted) {
                     scanningStarted = true
                     attempts = 0
                     scanAgain(view)
@@ -132,6 +146,7 @@ class ResolveActivity : AppCompatActivity() {
         browser.postDelayed({
             if (page === browser && attempts == 0 && !isFinishing) {
                 browser.stopLoading(); status.text = "Event page timed out. Return and retry."
+                disposeMetadata(browser)
             }
         }, 15000L)
     }
@@ -150,7 +165,7 @@ class ResolveActivity : AppCompatActivity() {
         val script = """(function(){let a=[...document.querySelectorAll('a[href],a[data-href],a[data-url],iframe[src],iframe[data-src]')];return JSON.stringify(a.map(x=>{let c=x.cloneNode(true);c.querySelectorAll('i,svg,img,.material-icons,.material-symbols-outlined,[class*="icon"]').forEach(n=>n.remove());let w=document.createTreeWalker(c,NodeFilter.SHOW_TEXT),parts=[];while(w.nextNode()){let t=w.currentNode.nodeValue.trim();if(t)parts.push(t)}let label=x.getAttribute('title')||x.getAttribute('aria-label')||parts.join(' ')||'';return {url:new URL(x.getAttribute('href')||x.dataset.href||x.dataset.url||x.getAttribute('src')||x.dataset.src||'',document.baseURI).href,language:x.getAttribute('data-language')||'',label:label.replace(/\s+/g,' ').trim().slice(0,90)};}));})()"""
 
         view.evaluateJavascript(script) { encoded ->
-            if (isFinishing || isDestroyed) return@evaluateJavascript
+            if (isFinishing || isDestroyed || page !== view) return@evaluateJavascript
             val found = discovered
             try {
                 val decoded = JSONTokener(encoded).nextValue() as String
@@ -169,10 +184,19 @@ class ResolveActivity : AppCompatActivity() {
             if (attempts < maxAttempts) {
                 if (found.isEmpty()) status.text = "Loading player choices… ($attempts/$maxAttempts)"
                 view.postDelayed({ scanAgain(view) }, 800L)
-            } else if (found.isEmpty()) {
-                status.text = "No supported player links found for this match."
+            } else {
+                if (found.isEmpty()) status.text = "No supported player links found for this match."
+                disposeMetadata(view)
             }
         }
+    }
+
+    private fun disposeMetadata(view: WebView) {
+        if (page !== view) return
+        page = null
+        (view.parent as? android.view.ViewGroup)?.removeView(view)
+        view.stopLoading()
+        view.destroy()
     }
 
     /** Drops icon-font ligature words such as "open_in_new" or "play_arrow" from link text. */
@@ -180,11 +204,12 @@ class ResolveActivity : AppCompatActivity() {
         raw.replace(Regex("\\b[a-z]+(?:_[a-z]+)+\\b"), " ").replace(Regex("\\s+"), " ").trim()
 
     private fun showPlayers(players: Map<String, Pair<ProviderRule, String>>) {
-        status.text = "${players.size} available player choice(s)"
+        lastPlayers = players.toMap()
+        status.text = "${players.size} published player choice(s) · playback not verified"
         choices.removeAllViews()
         addNativeChoice()
         var previousLanguage: String? = null
-        players.entries.sortedWith(compareBy({ languages[it.key] ?: "Unknown commentary language" }, { it.value.first.priority }, { it.value.second })).forEach { (url, info) ->
+        players.entries.sortedWith(compareBy({ languages[it.key] ?: "Unknown commentary language" }, { PlayerFailures.recent(this, it.key) }, { it.value.first.priority }, { it.value.second })).forEach { (url, info) ->
             val language = languages[url] ?: "Unknown commentary language"
             if (language != previousLanguage) {
                 choices.addView(TextView(this).apply {
@@ -222,7 +247,8 @@ class ResolveActivity : AppCompatActivity() {
                 setTypeface(null, Typeface.BOLD); maxLines = 2
             })
             column.addView(TextView(this).apply {
-                text = "${info.first.name} · fullscreen web player"; textSize = 12.5f
+                text = "${info.first.name} · " + if (PlayerFailures.recent(this@ResolveActivity, url)) "recent load error · retry" else "fullscreen web player"
+                textSize = 12.5f
                 setTextColor(0xFF97A3B8.toInt()); setPadding(0, dp(4), 0, 0)
             })
             if (quality != null) row.addView(TextView(this).apply {
@@ -256,5 +282,10 @@ class ResolveActivity : AppCompatActivity() {
         page?.destroy()
         page = null
         super.onDestroy()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (lastPlayers.isNotEmpty()) showPlayers(lastPlayers)
     }
 }

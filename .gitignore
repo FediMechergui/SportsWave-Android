@@ -18,5 +18,7 @@ dist/
 app/src/main/assets/logo_api_key.txt
 *.log
 *.hprof
+__pycache__/
+*.pyc
 .DS_Store
 Thumbs.db
