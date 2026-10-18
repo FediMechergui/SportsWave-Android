@@ -85,7 +85,7 @@ object TeamBadges {
                     return@execute
                 }
                 val bytes = if (publishedLogo.isNotBlank()) {
-                    if (UrlPolicy.allowsResource(publishedLogo, listOf("i.imgur.com", "upload.wikimedia.org", "a.espncdn.com", "semedia.filgoal.com"))) get(publishedLogo) else null
+                    if (UrlPolicy.allowsResource(publishedLogo, listOf("i.imgur.com", "upload.wikimedia.org", "a.espncdn.com", "semedia.filgoal.com","streamed.pk","yallashootkoora.online"))) get(publishedLogo) else null
                 } else fetchBadge(lookup, sportName)
                 bitmap = bytes?.let { decode(it) }
                 runCatching { if (bitmap != null) png.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) } else miss.writeText("") }

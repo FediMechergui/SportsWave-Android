@@ -74,13 +74,35 @@ class ResolveActivity : AppCompatActivity() {
         root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
         choices = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         scroll.addView(choices)
+        root.addView(TextView(this).apply {
+            text="Open original source website ↗";textSize=13f;setTextColor(accent);setPadding(0,dp(12),0,dp(12))
+            setOnClickListener { try { startActivity(Intent(Intent.ACTION_VIEW,android.net.Uri.parse(eventUrl))) }
+                catch(_:android.content.ActivityNotFoundException) { status.text="No browser installed" } }
+        })
         addNativeChoice()
+
+        if(URI(eventUrl).host.equals("streamed.pk",true)) {
+            staticTask=staticExecutor.submit {
+                val result=runCatching { StreamedCatalogue.players(URI(eventUrl).path.removePrefix("/watch/"),registry.providers) }
+                runOnUiThread {
+                    if(isFinishing || isDestroyed) return@runOnUiThread
+                    if(result.isFailure) { status.text="Streamed players unavailable. Return and retry.";return@runOnUiThread }
+                    val found=linkedMapOf<String,Pair<ProviderRule,String>>()
+                    result.getOrThrow().forEach { source ->
+                        source.language?.let { languages[source.url]=it }
+                        registry.byId(source.providerId)?.let { found[source.url]=it to source.label }
+                    }
+                    showPlayers(found)
+                }
+            }
+            return
+        }
 
         if (!URI(eventUrl).host.equals("viprow.im", true)) {
             // Static discovery only. Livekora's channel host redirects to its reviewed wrapper host.
             staticTask = staticExecutor.submit {
                 val result = runCatching {
-                    val hosts = if (URI(eventUrl).host.equals("pl.koralive1.cc", true))
+                    val hosts = if(URI(eventUrl).host.equals("yallashootkoora.online",true)) listOf("yallashootkoora.online") else if (URI(eventUrl).host.equals("pl.koralive1.cc", true))
                         listOf("pl.koralive1.cc", "pl.matchlivehd.com") else listOf("q.korahlive.online")
                     PublicPage.players(PublicPage.load(eventUrl, hosts), registry.providers)
                 }
@@ -156,7 +178,9 @@ class ResolveActivity : AppCompatActivity() {
         UrlPolicy.https(value) != null &&
             ((uri.host.equals("viprow.im", true) && uri.path.startsWith("/sports/")) ||
                 uri.host.equals("q.korahlive.online", true) ||
-                uri.host.equals("pl.koralive1.cc", true))
+                uri.host.equals("pl.koralive1.cc", true) ||
+                (uri.host.equals("yallashootkoora.online",true) && uri.path.startsWith("/ar/match/")) ||
+                (uri.host.equals("streamed.pk",true) && Regex("^/watch/[a-zA-Z0-9_-]{1,200}$").matches(uri.path)))
     }.getOrDefault(false)
 
     private fun scanAgain(view: WebView) {
@@ -205,15 +229,15 @@ class ResolveActivity : AppCompatActivity() {
 
     private fun showPlayers(players: Map<String, Pair<ProviderRule, String>>) {
         lastPlayers = players.toMap()
-        val eligible = players.filter { CommentaryLanguage.allowed(languages[it.key]) != null }
-        status.text = if(eligible.isEmpty()) "No confirmed Arabic or English commentary. Other and unknown languages are hidden."
-            else "${eligible.size} Arabic/English player choice(s); ${players.size - eligible.size} hidden. Playback not verified."
+        val eligible = players
+        status.text = if(eligible.isEmpty()) "No published compatible player links were returned."
+            else "${eligible.size} published player choice(s). Unverified languages are included. Playback not verified."
 
         choices.removeAllViews()
         addNativeChoice()
         var previousLanguage: String? = null
-        eligible.entries.sortedWith(compareBy({ CommentaryLanguage.allowed(languages[it.key]).orEmpty() }, { PlayerFailures.recent(this, it.key) }, { it.value.first.priority }, { it.value.second })).forEach { (url, info) ->
-            val language = CommentaryLanguage.allowed(languages[url]) ?: return@forEach
+        eligible.entries.sortedWith(compareBy({ if(CommentaryLanguage.allowed(languages[it.key])=="Arabic") 0 else if(CommentaryLanguage.allowed(languages[it.key])=="English") 1 else 2 }, { PlayerFailures.recent(this, it.key) }, { it.value.first.priority }, { it.value.second })).forEach { (url, info) ->
+            val language = CommentaryLanguage.display(languages[url])
             if (language != previousLanguage) {
                 choices.addView(TextView(this).apply {
                     text = language; textSize = 14f; setTextColor(accent)
@@ -264,7 +288,7 @@ class ResolveActivity : AppCompatActivity() {
     }
 
     private fun addNativeChoice() {
-        val language = CommentaryLanguage.allowed(intent.getStringExtra("native_language")) ?: return
+        val language = CommentaryLanguage.display(intent.getStringExtra("native_language"))
         val url = intent.getStringExtra("native_url") ?: return
         val type = intent.getStringExtra("native_type") ?: return
         val mode = when (type) { "hls" -> PlaybackMode.HLS; "dash" -> PlaybackMode.DASH; else -> return }

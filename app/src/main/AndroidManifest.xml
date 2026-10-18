@@ -2,6 +2,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <application android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher" android:label="SportsWave" android:theme="@style/AppTheme" android:usesCleartextTraffic="false">
         <activity android:name=".BroadcastActivity" android:exported="false" />
+        <activity android:name=".SourceDirectoryActivity" android:exported="false" />
         <activity android:name=".WebPlayerActivity" android:exported="false" android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize" />
         <activity android:name=".ResolveActivity" android:exported="false" />
         <activity android:name=".PlayerActivity" android:exported="false" />

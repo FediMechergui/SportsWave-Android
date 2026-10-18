@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.1 - 2026-10-18
+
+- Streamed schedules from its documented public API, with published HD/SD embed choices; player resources are limited to Streamed's own hosts and numbered load balancers.
+- Yalla Shoot Koora Arabic schedules (published UTC kick-offs, team names and crests) and Raceweek racing calendars.
+- Sources screen: audited website and mirror links that open in the browser, Arabic and Tunisian sites, Watania and Diwan Sport service links. All are labelled "Playback unverified".
+- Players whose commentary language is unknown are now listed with a "Language unverified" label instead of being hidden.
+- Fixed an app-not-responding freeze when switching schedule sources: merging about 1,200 events now runs off the main thread and team names are parsed without a regex split.
+- Removed 24 nameless Discord/Telegram invite links from the source directory and skip nameless entries.
+
 ## 1.0.0 - 2026-10-18
 
 - Left/right team cards with central reported scores, published crests and score freshness.

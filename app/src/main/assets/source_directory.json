@@ -1,0 +1,641 @@
+{
+  "sources": [
+    {
+      "name": "TimStreams",
+      "url": "https://timst.top//",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "Streamed",
+      "url": "https://streamed.pk/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Page responded; playback unverified"
+    },
+    {
+      "name": "Streamed ? mirror 2",
+      "url": "https://streamed.st/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "StreamCorner",
+      "url": "https://streamcorner.st/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Page responded; playback unverified"
+    },
+    {
+      "name": "StreamCorner ? mirror 2",
+      "url": "https://streamcorner.foo/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "StreamCorner ? mirror 3",
+      "url": "https://streamcorner.cloud/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "StreamCorner ? mirror 4",
+      "url": "https://streamcorner.fun/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "PPV.ST",
+      "url": "https://ppv.st/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Page responded; playback unverified"
+    },
+    {
+      "name": "PPV.ST ? mirror 2",
+      "url": "https://ppv.tj",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "PPV.ST ? mirror 3",
+      "url": "https://ppv.rw/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "PPV.ST ? mirror 4",
+      "url": "https://ppv.ms/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "PPV.ST ? mirror 5",
+      "url": "https://ppv.bi/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "PPV.ST ? mirror 6",
+      "url": "https://ppvs.pk/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "zlive",
+      "url": "https://zlive.st/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "StreamSports99",
+      "url": "https://streamsports99.ru",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "DaddyLive",
+      "url": "https://dlive.sx/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Page responded; playback unverified"
+    },
+    {
+      "name": "DaddyLive ? mirror 2",
+      "url": "https://daddylive.pk/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "SportsBite",
+      "url": "https://sportsbite.org/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "HTTP Error 403: Forbidden"
+    },
+    {
+      "name": "AURA Sports",
+      "url": "https://aurasports.xyz/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "⁠StreamFree",
+      "url": "https://streamfree.top/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "⁠StreamFree ? mirror 2",
+      "url": "https://strmfree.st/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "WatchSports(su)",
+      "url": "https://watchsports.su/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "Strumyk",
+      "url": "https://strumyk.pk/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "Strims24",
+      "url": "https://strims24.st/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "RoxieStreams",
+      "url": "https://roxiestreams.su/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "RoxieStreams ? mirror 2",
+      "url": "https://roxiestreams.info/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "RoxieStreams ? mirror 3",
+      "url": "https://roxiestreams.biz/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "Cinevid",
+      "url": "https://cinevid.st/events",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "BINTV",
+      "url": "https://www.bintv.cc/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "BINTV ? mirror 2",
+      "url": "https://cosectv.com/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "Watch Footy",
+      "url": "https://watchfooty.st/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "<urlopen error [Errno 11001] getaddrinfo failed>"
+    },
+    {
+      "name": "NTV",
+      "url": "https://ntv.cx/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "NTV ? mirror 2",
+      "url": "https://ntvs.cx/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "LiveTV",
+      "url": "https://livetv.sx/enx/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Page responded; playback unverified"
+    },
+    {
+      "name": "DamiTV",
+      "url": "https://damitv.st/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "90minutes",
+      "url": "https://www.90minutes.pro/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "StreamEast",
+      "url": "https://streameast.ga/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "StreamEast ? mirror 2",
+      "url": "https://streameast.ph/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "StreamEast ? mirror 3",
+      "url": "https://www.streameast.cf/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "StreamEast ? mirror 4",
+      "url": "https://www.streameast.ch/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "StreamEast ? mirror 5",
+      "url": "https://v2.streameast.ga/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "StreamEast ? mirror 6",
+      "url": "https://www.streameast.fi/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "DaddyLiveHD",
+      "url": "https://daddylive.mov/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "DaddyLiveHD ? mirror 2",
+      "url": "https://daddylive.app/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "DaddyLiveHD ? mirror 3",
+      "url": "https://daddylive.li/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "Reedstreams",
+      "url": "https://reedstreams.to/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "Reedstreams ? mirror 2",
+      "url": "https://reedstreams.st/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "xyzstreams",
+      "url": "https://xyzstreams.st/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "⁠Futbol-X",
+      "url": "https://www.futbol-x.xyz/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "⁠Futbol-X ? mirror 2",
+      "url": "https://www.futbol-x.top/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "Sportsurge",
+      "url": "https://v2.sportsurge.net/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "⁠Matchora",
+      "url": "https://matchora.to/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Page responded; playback unverified"
+    },
+    {
+      "name": "TotalSportek",
+      "url": "https://total-sportekk.st/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "Sportsurge.st",
+      "url": "https://ww1.sportsurge.st/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "Tap4Sport",
+      "url": "https://tap4sport.st/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "Tap4Sport ? mirror 2",
+      "url": "https://tap4sport.ci/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "Tap4Sport ? mirror 3",
+      "url": "https://tap4sport.pw/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "⁠CMVTV",
+      "url": "https://cmvlr.lovable.app/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "⁠Fantastic Soda",
+      "url": "https://fantasticsoda.com/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "FSL",
+      "url": "https://freestreams-live1h.pk/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "⁠Streami",
+      "url": "https://streamic.st/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "SportOnTV",
+      "url": "https://sportontv.click/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "⁠FalconStreams",
+      "url": "https://falconstreams.app/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Page responded; playback unverified"
+    },
+    {
+      "name": "CricHD",
+      "url": "https://crichd.at/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Page responded; playback unverified"
+    },
+    {
+      "name": "TheTVApp",
+      "url": "https://thetvapp.plus/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "MainPortal66",
+      "url": "https://mainportal66.com/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "⁠FCTV33",
+      "url": "https://www.fctv33hd.uno/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "⁠FCTV33 ? mirror 2",
+      "url": "https://emmau680.driveraudiencej2zeu49.sbs/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "VIP Box Sports",
+      "url": "https://vipleague.me/home",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "VIP Box Sports ? mirror 2",
+      "url": "https://olympicweb.me/home",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "VIP Box Sports ? mirror 3",
+      "url": "https://fbstream.is/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "Baked.live",
+      "url": "https://baked.live/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "Guide TV",
+      "url": "https://guidetv.live/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "NBAMonster",
+      "url": "https://nbamonster.com/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "OnHockey",
+      "url": "https://onhockey.tv/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "Pitsport",
+      "url": "https://pitsport.st/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "OvertakeFans",
+      "url": "https://overtakefans.com/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "F1 Live",
+      "url": "https://flive.dpdns.org/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "NontonGP",
+      "url": "https://esp32.nontonx.com/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "r/rugbystreams",
+      "url": "https://www.reddit.com/r/rugbystreams/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "Live Snooker Guide",
+      "url": "https://redd.it/1ibz2yz",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "Tiz-Cycling",
+      "url": "https://tiz-cycling.tv/",
+      "language": "unverified",
+      "origin": "FMHY",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "Yalla Shoot Koora",
+      "url": "https://yallashootkoora.online/ar/",
+      "language": "Arabic website",
+      "origin": "Researched",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "Yalla Yall",
+      "url": "https://yalla-yall.com/",
+      "language": "Arabic website",
+      "origin": "Researched",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "KoraCity",
+      "url": "https://m.koracity.live/cms",
+      "language": "Arabic website",
+      "origin": "Researched",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "Watania Tunisia live",
+      "url": "https://www.tunisiatv.tn/ar/live",
+      "language": "Arabic website",
+      "origin": "Researched",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "YacineTV",
+      "url": "https://yacinetv.website/",
+      "language": "Arabic website",
+      "origin": "Researched",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "KooraTV",
+      "url": "https://kooratv.club/",
+      "language": "Arabic website",
+      "origin": "Researched",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "Livekora",
+      "url": "https://www.livekora.vip/",
+      "language": "Arabic website",
+      "origin": "Researched",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "Raceweek calendars",
+      "url": "https://raceweek.io/",
+      "language": "English website",
+      "origin": "Researched",
+      "availability": "Playback unverified"
+    },
+    {
+      "name": "Diwan Sport ? Tunisia",
+      "url": "https://www.diwansport.com/",
+      "language": "Tunisia ? commentary unverified",
+      "origin": "Official broadcaster",
+      "availability": "Playback unverified"
+    }
+  ]
+}

@@ -11,6 +11,7 @@ object SportIcons {
         "ice-hockey" -> R.drawable.ic_sports_hockey
         "rugby", "aussie-rules" -> R.drawable.ic_sports_rugby
         "baseball" -> R.drawable.ic_sports_baseball
+        "cricket" -> R.drawable.ic_sports_cricket
         "golf" -> R.drawable.ic_sports_golf
         "darts" -> R.drawable.ic_sport_darts
         "snooker" -> R.drawable.ic_sport_billiards

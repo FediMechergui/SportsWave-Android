@@ -4,6 +4,7 @@ import java.net.URI
 import java.util.Locale
 
 object UrlPolicy {
+    private val streamedBalancer=Regex("^lb[0-9]{1,3}\\.strmd\\.st$")
     fun https(value: String): URI? = runCatching { URI(value) }.getOrNull()?.takeIf {
         it.scheme.equals("https", true) && !it.host.isNullOrBlank() &&
             it.rawUserInfo == null && it.port in listOf(-1, 443)
@@ -11,6 +12,8 @@ object UrlPolicy {
     fun hostMatches(host: String, pattern: String): Boolean {
         val h = host.lowercase(Locale.ROOT)
         val p = pattern.lowercase(Locale.ROOT)
+        // Streamed rotates numbered load balancers; this does not permit arbitrary subdomains.
+        if(p == "lb*.strmd.st") return streamedBalancer.matches(h)
         return if (p.startsWith("*.")) h.endsWith("." + p.removePrefix("*.")) else h == p
     }
     fun allowsResource(url: String, hosts: List<String>): Boolean {

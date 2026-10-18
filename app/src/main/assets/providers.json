@@ -122,6 +122,24 @@
         "cdn.live.easybroadcast.io",
         "imasdk.googleapis.com"
       ]
+    },
+    {
+      "id": "streamed-embed",
+      "name": "Streamed embed",
+      "hosts": [
+        "embed.st"
+      ],
+      "pathPrefix": "/embed/",
+      "mode": "web",
+      "enabled": true,
+      "priority": 15,
+      "resourceHosts": [
+        "embed.st",
+        "strmd.b-cdn.net",
+        "cdn.jsdelivr.net",
+        "ssl.p.jwpcdn.com",
+        "lb*.strmd.st"
+      ]
     }
   ]
 }

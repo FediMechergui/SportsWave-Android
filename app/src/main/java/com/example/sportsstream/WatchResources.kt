@@ -8,6 +8,7 @@ object WatchResources {
         add(WatchResource("beIN SPORTS · TV guide", "https://www.beinsports.com/en-mena/tv-guide", "English / Arabic guide · regional rights apply"))
         add(WatchResource("beIN CONNECT", "https://connect.bein.com/", "Arabic / English service · subscription and region apply"))
         if(sport in setOf("football","basketball","handball","volleyball")) {
+            add(WatchResource("Diwan Sport · Tunisia", "https://www.diwansport.com/", "Tunisian sports service · subscription and event availability apply"))
             add(WatchResource("Watania · Tunisia live", "https://www.tunisiatv.tn/ar/live", "Arabic broadcaster · check programme and availability"))
         }
         if(sport == "motorsports") add(WatchResource("F1 TV", "https://f1tv.formula1.com/", "English service · subscription and region apply"))
