@@ -1,6 +1,6 @@
 # FMHY sports-source audit — 18 October 2026
 
-Discovery starting point: [FMHY Live Sports](https://fmhy.net/video#live-sports). This is a source investigation, not a list of enabled app providers or a video-playback certification. The released 1.0.0 APK is unchanged.
+Discovery starting point: [FMHY Live Sports](https://fmhy.net/video#live-sports). This records discovery results and integration limits. Version 1.0.1 integrates Streamed schedules/player discovery, Yalla Arabic fixtures, Raceweek meeting calendars and a browser source directory. It does not certify video playback.
 
 ## Strongest candidate: Streamed
 
@@ -49,4 +49,4 @@ FMHY also links a [calendar-resource directory](https://fmhy.net/misc#sports), i
 
 This pass does not verify new Tunisian-league streams, Arabic commentary, universal team logos or horse-racing live timing. Existing FilGoal/Tunisia and official Watania/beIN resources remain relevant. A site's interface language or an English-looking channel name is not commentary-language evidence.
 
-The accompanying inventory records the FMHY links, including mirrors and reference/status pages; it is not an allowlist. Raw bounded HTTP captures, probe results and language samples are retained locally under ignored `audit/fmhy-*` files. No new provider domains, paid tasks or credentials were added to the app.
+The accompanying inventory records the FMHY links, including mirrors and reference/status pages; it is not an allowlist. Raw bounded HTTP captures, probe results and language samples are retained locally under ignored `audit/fmhy-*` files. Only reviewed Streamed embed/resource hosts are enabled inside the app; other directory sites open in the browser. No paid tasks or credentials were added.

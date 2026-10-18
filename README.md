@@ -1,13 +1,13 @@
 <p align="center"><img src="docs/branding/sportswave-icon.png" width="112" alt="SportsWave wave and play icon"></p>
 <h1 align="center">SportsWave</h1>
 <p align="center">A native Android sports catalogue with in-app player discovery and fullscreen playback.</p>
-<p align="center"><a href="https://github.com/FediMechergui/SportsWave-Android/releases/tag/v1.0.0">Download the APK</a> · <a href="PROVIDERS.md">Provider guide</a> · <a href="TEST_REPORT.md">Test report</a></p>
+<p align="center"><a href="https://github.com/FediMechergui/SportsWave-Android/releases/tag/v1.0.1">Download the APK</a> · <a href="PROVIDERS.md">Provider guide</a> · <a href="TEST_REPORT.md">Test report</a></p>
 
 ## Install
 
-Download **SportsWave-1.0.0.apk** from the [GitHub release](https://github.com/FediMechergui/SportsWave-Android/releases/tag/v1.0.0). Open it on an Android 8.0+ device and allow installation from that download source if Android asks. The APK is a signed release build, not a debug APK.
+Download **SportsWave-1.0.1.apk** from the [GitHub release](https://github.com/FediMechergui/SportsWave-Android/releases/tag/v1.0.1). Open it on an Android 8.0+ device and allow installation from that download source if Android asks. The APK is a signed release build, not a debug APK.
 
-The release also includes **SportsWave-1.0.0.aab** for Android store distribution and **SHA256SUMS.txt** for checking downloads. An AAB is not directly installable; use the APK on your phone. This GitHub release is not a Google Play listing.
+The release also includes **SportsWave-1.0.1.aab** for Android store distribution and **SHA256SUMS.txt** for checking downloads. An AAB is not directly installable; use the APK on your phone. This GitHub release is not a Google Play listing.
 
 If you previously installed a development/debug APK with the same package name, Android cannot update it with the new release key. Remove that debug installation first; this removes its local app data. Future release APKs will use the same release-signing identity.
 
@@ -15,23 +15,29 @@ If you previously installed a development/debug APK with the same package name, 
 
 ESPN's English public scoreboards and FilGoal's Arabic football cards are integrated. Selecting a calendar date fetches that date, with adjacent API dates to cover timezone boundaries; a seven-day strip and the device timezone appear above the fixtures. The default metadata sources are English or Arabic; the legacy German OpenLigaDB adapter is no longer in the source picker.
 
-All 19 sport tabs have local vector icons. ESPN adds selected football, basketball, American football, baseball, hockey, tennis, golf, Formula 1, UFC and rugby competitions. Other sports retain available VIPRow schedules; complete worldwide coverage is not claimed. FilGoal covers its published football fixtures. Score-only entries never become invented stream links.
+All 20 sport tabs have local vector icons. ESPN adds selected football, basketball, American football, baseball, hockey, tennis, golf, Formula 1, UFC and rugby competitions. Other sports retain available VIPRow schedules; complete worldwide coverage is not claimed. FilGoal covers its published football fixtures. Score-only entries never become invented stream links.
 
-Player choices require explicit Arabic or English commentary metadata. Other and unknown languages are hidden, including native choices without published language metadata. An Arabic website or an English channel name alone is not proof of commentary language. This can leave a match with no eligible server.
+Arabic and English commentary choices are prioritized. Published players with missing commentary metadata remain selectable and are labelled Language unverified. Other explicitly reported languages are labelled. Page language and channel names are not proof of commentary language.
+
+## Added in 1.0.1
+
+Streamed adds public event schedules and published player choices; Yalla Shoot Koora adds Arabic football cards and crests. Raceweek adds multi-day racing meeting calendars, without inventing session times, scores or streams. Cricket has its own tab and icon. Fixture aggregation runs off the UI thread to address the source-switching freeze found during testing.
+
+The Sources screen lists audited websites and mirrors, including Arabic and Tunisian services such as Watania and Diwan Sport. Directory links open in the browser and remain playback unverified; they are not a count of working in-app servers. Channel posts remain separate from match fixtures. See [source audit](docs/FMHy_SPORTS_AUDIT.md).
 
 ## Release coverage
 
 **1.0.0:** native left/right team scoreboards, selected English ESPN score feeds, Arabic FilGoal fixtures, Tunisian/international competition priorities, date navigation, race entrants/classifications, shared published crests and an integrated official beIN MENA TV guide. The TV guide offers date/channel/live-broadcast filters and official channel handoffs. Match-name filtering requires both team names; spelling differences can hide a broadcast.
 
-**Coverage remains source-dependent.** This release does not guarantee a server for every event, every team crest, second-by-second scores or comprehensive worldwide calendars. Unknown commentary languages stay hidden. Official watch services open in their own app/browser and can require subscriptions or regional availability. Calendar entries and guide listings are not proof of working video. Earlier verified playback is dated in the test report; YacineTV/Robotiva has no newly verified player integration.
+**Coverage remains source-dependent.** This release does not guarantee a server for every event, every team crest, second-by-second scores or comprehensive worldwide calendars. Unknown commentary languages are labelled rather than hidden. Official watch services open in their own app/browser and can require subscriptions or regional availability. Calendar entries and guide listings are not proof of working video. Earlier verified playback is dated in the test report; YacineTV/Robotiva has no newly verified player integration.
 
 | Feature | Current behavior |
 | --- | --- |
-| Catalogue | VIPRow, ESPN, FilGoal and available Livekora/KorahLive metadata; date-specific calendars, search, sorting and Tunisia shortcut. |
+| Catalogue | VIPRow, ESPN, FilGoal, Streamed, Yalla Shoot Koora, Raceweek and available Livekora/KorahLive metadata; date-specific calendars, search, sorting and Tunisia shortcut. |
 | Sport coverage | All 19 published VIPRow categories are configured, including the corrected MMA route. Availability varies by category and date. |
 | Scores/status | Source-reported scores/status when published; other started fixtures are labelled status unverified. No invented match clocks. |
 | Player discovery | Actual published anchors, iframe src/data-src and server data attributes; bounded scans, title labels and exact URL deduplication. |
-| Web providers | TodayStreams, DaddyLive, Dembed, YasirTV, AlbaPlayer and SNRT recognition. Full published YasirTV query parameters are preserved. |
+| Web providers | Streamed, TodayStreams, DaddyLive, Dembed, YasirTV, AlbaPlayer and SNRT recognition. Full published YasirTV query parameters are preserved. |
 | Web playback | Fullscreen WebView, explicit nested-provider/resource rules, popup restrictions, loading timeout, retry and back/switch-server controls. |
 | Native playback | Media3 HLS/DASH routing for configured authorized manifests, buffering/error/retry and lifecycle handling. |
 | Arabic | UTF-8 team/server labels are retained; complete localization and RTL layout remain planned. |
@@ -94,7 +100,7 @@ The source namespace/package remains `com.example.sportsstream` to preserve the 
 
 ## Tests and roadmap
 
-Beta.4 includes 44 offline Android tests and three Python importer tests, adding coverage for competition priority, conservative aggregation, public scores and saved schedules. Offline tests cover provider recognition, unsafe URLs, hostname boundaries, YasirTV query preservation, Arabic labels, multiple sources, deduplication, routing, event normalization/matching and nested-provider permissions. Tests do not depend on live sports feeds. GitHub Actions runs tests and produces a debug APK; signed releases use the private local signing key.
+Version 1.0.1 passes 67 offline Android tests and three Python importer tests, adding coverage for competition priority, conservative aggregation, public scores and saved schedules. Offline tests cover provider recognition, unsafe URLs, hostname boundaries, YasirTV query preservation, Arabic labels, multiple sources, deduplication, routing, event normalization/matching and nested-provider permissions. Tests do not depend on live sports feeds. GitHub Actions runs tests and produces a debug APK; signed releases use the private local signing key.
 
 - [Actual test results and emulator limitations](TEST_REPORT.md)
 - [How to add a provider](PROVIDERS.md)
