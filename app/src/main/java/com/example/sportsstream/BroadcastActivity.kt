@@ -64,7 +64,7 @@ class BroadcastActivity : AppCompatActivity() {
         filters.addView(CheckBox(this).apply { text="Live only";setTextColor(Color.WHITE);setOnCheckedChangeListener { _,checked -> liveOnly=checked;render() } })
         root.addView(filters)
         if(matchOnly) root.addView(CheckBox(this).apply { text="Match: $home / $away";setTextColor(Color.WHITE);isChecked=true;setOnCheckedChangeListener { _,c -> matchOnly=c;render() } })
-        root.addView(Button(this).apply { text="Official services · ${intent.getStringExtra("sport_name") ?: sport}";setOnClickListener { services() } })
+        root.addView(Button(this).apply { text="Watch services & websites · ${intent.getStringExtra("sport_name") ?: sport}";setOnClickListener { services() } })
         status=label("Loading official channel schedules…",12f); root.addView(status)
         rows=androidx.recyclerview.widget.RecyclerView(this).apply {
             layoutManager=androidx.recyclerview.widget.LinearLayoutManager(this@BroadcastActivity)
@@ -106,7 +106,7 @@ class BroadcastActivity : AppCompatActivity() {
     }
     private fun services() {
         val resources=WatchResources.forSport(sport)
-        androidx.appcompat.app.AlertDialog.Builder(this).setTitle("Official watch services")
+        androidx.appcompat.app.AlertDialog.Builder(this).setTitle("Watch services & websites")
             .setItems(resources.map { "${it.name}\n${it.note}" }.toTypedArray()) { _,i -> openExternal(resources[i].url) }
             .setNegativeButton("Close",null).show()
     }

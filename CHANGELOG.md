@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Default to Arabic/Tunisian preference across all sports, with international fallback feeds retained and Tunisian competitions prioritized in relevance sorting.
+- Start the Sources directory with its Arabic/Tunisian filter enabled; expose Tunisian and researched Yacine website handoffs in every sport's watch options.
+- Restore the missing Raceweek source-picker entry. Yacine and beIN Match video playback remain unverified; see docs/ARABIC_CHANNELS.md.
+
 ## 1.0.1 - 2026-10-18
 
 - Streamed schedules from its documented public API, with published HD/SD embed choices; player resources are limited to Streamed's own hosts and numbered load balancers.

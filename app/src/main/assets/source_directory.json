@@ -636,6 +636,20 @@
       "language": "Tunisia ? commentary unverified",
       "origin": "Official broadcaster",
       "availability": "Playback unverified"
+    },
+    {
+      "name": "Yacine TV - alternate website",
+      "url": "https://www.yacinetv.dev/",
+      "language": "Arabic website",
+      "origin": "Researched - separate site",
+      "availability": "Public channel selector; playback unverified"
+    },
+    {
+      "name": "beIN Match",
+      "url": "https://beinmatchatv.com/",
+      "language": "Arabic website",
+      "origin": "User supplied - researched",
+      "availability": "Page responded; match API and playback unverified"
     }
   ]
 }

@@ -46,7 +46,7 @@ class SourceDirectoryActivity:AppCompatActivity() {
         } })
         val search=EditText(this).apply { hint="Search sources or Arabic websites";setTextColor(Color.WHITE);setHintTextColor(Color.LTGRAY);isSingleLine=true }
         root.addView(search)
-        val arabic=CheckBox(this).apply { text="Arabic & Tunisian websites";setTextColor(Color.WHITE) };root.addView(arabic)
+        val arabic=CheckBox(this).apply { text="Arabic & Tunisian websites";isChecked=true;setTextColor(Color.WHITE) };root.addView(arabic)
         val count=text("");root.addView(count)
         val list=RecyclerView(this).apply { layoutManager=LinearLayoutManager(this@SourceDirectoryActivity);itemAnimator=null };root.addView(list,LinearLayout.LayoutParams(-1,0,1f))
         fun render() {

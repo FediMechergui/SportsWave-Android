@@ -128,7 +128,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var chips: LinearLayout
     private lateinit var tabs: LinearLayout
     private val adapter = CatalogueAdapter()
-    private var catalogueId = "all"
+    private var catalogueId = "arabic"
     private var sourceStatus = ""
     private val catalogueExecutor = java.util.concurrent.Executors.newSingleThreadExecutor()
     private val aggregationExecutor = java.util.concurrent.Executors.newSingleThreadExecutor()
@@ -168,7 +168,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         savedInstanceState?.let { saved ->
             selected = sports.firstOrNull { it.slug == saved.getString("sport") } ?: selected
-            catalogueId = saved.getString("catalogue", "all")
+            catalogueId = saved.getString("catalogue", "arabic")
             selectedDay = runCatching { LocalDate.parse(saved.getString("day")) }.getOrNull()
             selectedFilter = saved.getString("filter", "All")
         }
@@ -241,15 +241,15 @@ class MainActivity : AppCompatActivity() {
         val outer = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(bg) }
         setContentView(outer)
         val catalogueChoice = TextView(this).apply {
-            val ids=listOf("all", "viprow", "korahlive", "livekora", "espn", "filgoal", "filgoal", "streamed", "yalla", "raceweek")
-            val names=listOf("All public sources", "VIPRow", "KorahLive", "Livekora", "ESPN", "FilGoal", "Tunisia · FilGoal", "Streamed", "Yalla Shoot Koora · Arabic")
+            val ids=listOf("arabic", "all", "viprow", "korahlive", "livekora", "espn", "filgoal", "filgoal", "streamed", "yalla", "raceweek")
+            val names=listOf("Arabic & Tunisia · all sports", "All public sources", "VIPRow", "KorahLive", "Livekora", "ESPN", "FilGoal", "Tunisia · FilGoal", "Streamed", "Yalla Shoot Koora · Arabic", "Raceweek · racing calendars")
             text = "Schedules: ${names[ids.indexOf(catalogueId).coerceAtLeast(0)]} ▾"; setTextColor(accent); textSize = 14f; setPadding(d(20), d(10), d(20), d(10))
             setOnClickListener {
                 androidx.appcompat.app.AlertDialog.Builder(this@MainActivity).setTitle("Catalogue source")
                     .setItems(names.toTypedArray()) { _, index ->
                         catalogueId = ids[index]
                         text = "Schedules: ${names[index]} ▾"
-                        if(index==6) { selected=sports.first();selectedFilter="All";query.setText("Tunisia");renderSportChips() }
+                        if(index==7) { selected=sports.first();selectedFilter="All";query.setText("Tunisia");renderSportChips() }
                         else query.setText("")
                         allFixtures = emptyList();mergedFixtures=emptyList();mergedInput=null;loadSchedule(silent = false)
                     }.show()
@@ -457,14 +457,14 @@ class MainActivity : AppCompatActivity() {
             swipe.isRefreshing = true
         }
         rebuild()
-        if (catalogueId == "all") {
+        if (catalogueId in setOf("all", "arabic")) {
             val sport = selected.slug
             catalogueTask = catalogueExecutor.submit {
                 val providers = buildList<CatalogueProvider> {
+                    if(sport == "football") { add(FilGoalCatalogue()); add(YallaCatalogue()); add(LivekoraCatalogue()); add(KorahLiveCatalogue()) }
                     add(StreamedCatalogue())
                     if(sport=="motorsports") add(RaceweekCatalogue())
                     if(EspnCatalogue.routes(sport).isNotEmpty()) add(EspnCatalogue())
-                    if(sport == "football") { add(FilGoalCatalogue()); add(YallaCatalogue()); add(LivekoraCatalogue()); add(KorahLiveCatalogue()) }
                 }
                 val statuses = mutableListOf<String>()
                 val workers = java.util.concurrent.Executors.newFixedThreadPool(3)
@@ -492,7 +492,7 @@ class MainActivity : AppCompatActivity() {
                 } finally { workers.shutdownNow() }
             }
         }
-        if (catalogueId != "viprow" && catalogueId != "all") {
+        if (catalogueId !in setOf("viprow", "all", "arabic")) {
             val provider: CatalogueProvider = when (catalogueId) { "raceweek" -> RaceweekCatalogue(); "yalla" -> YallaCatalogue(); "streamed" -> StreamedCatalogue(); "livekora" -> LivekoraCatalogue(); "openliga" -> OpenLigaCatalogue(); "espn" -> EspnCatalogue(); "filgoal" -> FilGoalCatalogue(); else -> KorahLiveCatalogue() }
             val sourceName = when (catalogueId) { "raceweek" -> "Raceweek"; "yalla" -> "Yalla Shoot Koora"; "streamed" -> "Streamed"; "livekora" -> "Livekora"; "openliga" -> "OpenLigaDB"; "espn" -> "ESPN"; "filgoal" -> "FilGoal"; else -> "KorahLive" }
             val sport = selected.slug
@@ -720,7 +720,7 @@ class MainActivity : AppCompatActivity() {
                 TeamLogoIndex.remember(events)
                 if(Thread.currentThread().isInterrupted) return@submit
                 val merged=EventAggregation.merge(events).map { group -> fixture(group.event).copy(memberIds=group.members.map { it.catalogueId+"|"+it.id }.toSet()) }
-                merged.forEach { CompetitionPriority.tier(it.league) }
+                merged.forEach { CompetitionPriority.tier(it.league); RegionalPreference.competitionRank(it.league) }
                 if(Thread.currentThread().isInterrupted) return@submit
                 runOnUiThread {
                     if(isFinishing || isDestroyed || allFixtures!==input) return@runOnUiThread
@@ -745,7 +745,8 @@ class MainActivity : AppCompatActivity() {
                     search.isNotBlank() && it.name.contains(search, true) -> 1
                     else -> 2
                 }
-            }.thenBy { CompetitionPriority.tier(it.league) }.thenBy { if (it.url.isNotBlank()) 0 else 1 }
+            }.thenBy { if(catalogueId=="arabic") RegionalPreference.competitionRank(it.league) else 0 }
+                .thenBy { CompetitionPriority.tier(it.league) }.thenBy { if(catalogueId=="arabic") RegionalPreference.sourceRank(it.sourceId) else 0 }.thenBy { if (it.url.isNotBlank()) 0 else 1 }
                 .thenBy { kotlin.math.abs(it.start - now) }
         }.thenBy { it.id }
         fun ofPhase(vararg wanted: Phase) = matched.filter { phases[it.id] in wanted }.sortedWith(ordering)
@@ -831,7 +832,7 @@ class MainActivity : AppCompatActivity() {
             androidx.appcompat.app.AlertDialog.Builder(this).setTitle(f.name)
                 .setMessage("${f.league}\n${dayLabel(f.start)}\n\n${f.sourceId} · fetched ${timeFormat.format(Date(f.receivedAt))}\nNo published player is linked to this fixture. Scores may be delayed. Long-press a match to favourite it.")
                 .setPositiveButton("Match details") { _, _ -> matchDetails(f) }
-                .setNeutralButton("TV & official watch") { _, _ -> showBroadcasts(f) }
+                .setNeutralButton("TV & watch") { _, _ -> showBroadcasts(f) }
                 .setNegativeButton("Close", null).show()
             return
         }
@@ -847,7 +848,7 @@ class MainActivity : AppCompatActivity() {
                     putExtra("event_id", choice.id); putExtra("event_name", choice.name); putExtra("event_url", choice.url)
                     source?.let { putExtra("native_url", it.url); putExtra("native_type", it.type) }
                 })
-            }.setNeutralButton("TV & official watch") { _, _ -> showBroadcasts(f) }
+            }.setNeutralButton("TV & watch") { _, _ -> showBroadcasts(f) }
             .setPositiveButton("Match details") { _, _ -> matchDetails(f) }
             .setNegativeButton("Cancel", null).show()
     }

@@ -1,3 +1,10 @@
+# Unreleased regional default verification - 2026-10-18
+
+- 70 Android unit tests and three Python importer tests pass. Signed release packaging passed; the final menu-label changes were additionally built and checked in a signed debug APK. No new public release was created.
+- On the dedicated SportsWave_API35 emulator, confirmed the Arabic/Tunisian all-sports default, combined football calendar (826 records in that snapshot), initially checked regional directory filter (10 links), beIN Match search result, and Basketball watch options containing Watania, Diwan, Yacine, beIN Match and international services. Website choices are explicitly playback unverified.
+- The first emulator pass encountered a system-process not-responding dialog during builds. After reboot, the signed debug build launched in 2,396 ms and the listed interactions completed; no ANR has occurred since reboot. This does not certify physical-device latency or third-party video.
+- Corrected user URL beinmatchatv.com returned an Arabic football page with no static player links. The follow-up API check was blocked by automatic approval review; all-beIN native playback remains unverified. See docs/ARABIC_CHANNELS.md.
+
 # SportsWave 1.0.1 verification - 2026-10-18
 
 - Gradle 8.11.1: 67 Android unit tests and three Python importer tests pass. Signed, minified release APK and AAB build successfully (versionCode 7). APK signing matches the existing release certificate and 16 KB alignment passes.

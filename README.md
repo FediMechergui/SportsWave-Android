@@ -13,6 +13,8 @@ If you previously installed a development/debug APK with the same package name, 
 
 ## Calendars, scores and Arabic/English players
 
+The development build defaults to **Arabic & Tunisia · all sports**, retaining international fallback calendars and all 20 sports. Tunisian competitions and Arabic catalogue sources receive relevance priority, and the source directory initially shows Arabic/Tunisian websites. Watania, Diwan, beIN Match and researched Yacine website handoffs are accessible across sports. These changes are not in the 1.0.1 download above; see [Arabic-channel investigation](docs/ARABIC_CHANNELS.md) for the unverified Yacine/beIN Match playback.
+
 ESPN's English public scoreboards and FilGoal's Arabic football cards are integrated. Selecting a calendar date fetches that date, with adjacent API dates to cover timezone boundaries; a seven-day strip and the device timezone appear above the fixtures. The default metadata sources are English or Arabic; the legacy German OpenLigaDB adapter is no longer in the source picker.
 
 All 20 sport tabs have local vector icons. ESPN adds selected football, basketball, American football, baseball, hockey, tennis, golf, Formula 1, UFC and rugby competitions. Other sports retain available VIPRow schedules; complete worldwide coverage is not claimed. FilGoal covers its published football fixtures. Score-only entries never become invented stream links.
