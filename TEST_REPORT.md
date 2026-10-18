@@ -1,4 +1,11 @@
-# Unreleased regional default verification - 2026-10-18
+# SportsWave 1.0.2 verification - 2026-10-18
+
+- Signed, minified release APK and signed AAB built with Gradle 8.11.1, versionCode 8. All 70 Android unit tests and three Python importer tests pass. APK signing matches the existing release identity; AAB signature and 16 KB APK alignment pass.
+- Installed the release APK as an update on SportsWave_API35 (Android 15). One cold launch measured 1,394 ms. Confirmed the Arabic/Tunisian all-sports default, 1,037-fixture combined snapshot with an honest partial-source-availability message, ten-link regional directory filter, searchable beIN Match entry, and Basketball watch menu with Watania, Diwan, Yacine, beIN Match and international services.
+- No ANR has occurred since this emulator boot and the crash buffer was empty at the end of these checks. Earlier emulator system freezes remain recorded below; this pass does not establish physical-device performance.
+- Website handoffs remain playback unverified. No complete all-beIN native livestream feed or new third-party video playback is certified. This release packages the documented regional-default changes and preserves provider limits.
+
+# Historical regional default preview verification - 2026-10-18
 
 - 70 Android unit tests and three Python importer tests pass. Signed release packaging passed; the final menu-label changes were additionally built and checked in a signed debug APK. No new public release was created.
 - On the dedicated SportsWave_API35 emulator, confirmed the Arabic/Tunisian all-sports default, combined football calendar (826 records in that snapshot), initially checked regional directory filter (10 links), beIN Match search result, and Basketball watch options containing Watania, Diwan, Yacine, beIN Match and international services. Website choices are explicitly playback unverified.

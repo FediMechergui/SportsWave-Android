@@ -1,6 +1,6 @@
 # Arabic and Tunisian default — 18 October 2026
 
-The development build defaults to **Arabic & Tunisia · all sports**. It retains the combined international feeds and all 20 sports, prioritizes Tunisian competition names in relevance ordering, and prioritizes Arabic catalogue providers on otherwise comparable entries. It does not filter other sports out. Kickoff and League sorts remain available. Arabic commentary choices already precede English and unverified players.
+Version 1.0.2 defaults to **Arabic & Tunisia · all sports**. It retains the combined international feeds and all 20 sports, prioritizes Tunisian competition names in relevance ordering, and prioritizes Arabic catalogue providers on otherwise comparable entries. It does not filter other sports out. Kickoff and League sorts remain available. Arabic commentary choices already precede English and unverified players.
 
 The Sources directory initially enables its Arabic/Tunisian filter; users can disable it. Watania, Diwan Sport, beIN guide/CONNECT and beIN Match and the researched Yacine websites are watch-resource handoffs across every sport. They are service links, not evidence that the selected match is being broadcast.
 
