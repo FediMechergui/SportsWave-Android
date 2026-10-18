@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.0 - 2026-10-18
+
+- Left/right team cards with central reported scores, published crests and score freshness.
+- English ESPN multi-sport calendars and Arabic FilGoal fixtures; explicit-date requests, timezone display and seven-day navigation.
+- Tunisian leagues, world events and major competitions receive priority; added Tunisia/FilGoal shortcut and reviewed team-name aliases.
+- Native beIN MENA programme guide with channel/date/live-broadcast filters, replay labels, conservative match-name filtering and official channel/service handoffs.
+- Race season-calendar queries, published entrants/classifications and separate race presentation; no fake head-to-head scores for races.
+- Local vector sport icons, shared published team logos, saved schedules and strict Arabic/English commentary filtering.
+- Asynchronous WebView startup and bounded/cached identity/priority work address the emulator startup stalls found during QA.
+
+External calendars, live scores, artwork and servers remain incomplete. Official service links can require accounts, subscriptions and regional availability. No new YacineTV/Robotiva player is certified. Unknown commentary is hidden; a match may have no eligible in-app server. This is a GitHub release, not a Google Play submission.
+
 ## 1.0.0-beta.4 - 2026-10-18
 
 - Preserve records from other sources while each schedule refresh completes, and replace updated source records rather than keeping old scores first.

@@ -37,7 +37,7 @@ object TeamBadges {
     }
     private val inFlight = HashSet<String>()
     private val waiting = HashMap<String, MutableList<ImageView>>()
-    private val executor = Executors.newSingleThreadExecutor()
+    private val executor = Executors.newFixedThreadPool(3)
     private var dir: File? = null
     private var apiKey = DEFAULT_KEY
     private var lastCall = 0L
@@ -52,7 +52,8 @@ object TeamBadges {
         }.getOrNull() ?: DEFAULT_KEY
     }
 
-    fun bind(view: ImageView, team: String, sport: String, publishedLogo: String = "") {
+    fun bind(view: ImageView, team: String, sport: String, logo: String = "") {
+        val publishedLogo = logo.ifBlank { TeamLogoIndex.find(team,sport) }
         val lookup = normalize(team)
         val key = "$sport|$lookup|$publishedLogo"
         view.tag = key
@@ -84,7 +85,7 @@ object TeamBadges {
                     return@execute
                 }
                 val bytes = if (publishedLogo.isNotBlank()) {
-                    if (UrlPolicy.allowsResource(publishedLogo, listOf("i.imgur.com", "upload.wikimedia.org"))) get(publishedLogo) else null
+                    if (UrlPolicy.allowsResource(publishedLogo, listOf("i.imgur.com", "upload.wikimedia.org", "a.espncdn.com", "semedia.filgoal.com"))) get(publishedLogo) else null
                 } else fetchBadge(lookup, sportName)
                 bitmap = bytes?.let { decode(it) }
                 runCatching { if (bitmap != null) png.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) } else miss.writeText("") }
@@ -153,7 +154,7 @@ object TeamBadges {
         else -> ""
     }
 
-    private fun fetchBadge(team: String, sportName: String): ByteArray? {
+    @Synchronized private fun fetchBadge(team: String, sportName: String): ByteArray? {
         val wait = MIN_GAP_MS - (System.currentTimeMillis() - lastCall)
         if (wait > 0) Thread.sleep(wait)
         lastCall = System.currentTimeMillis()

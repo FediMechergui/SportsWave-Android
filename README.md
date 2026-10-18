@@ -1,27 +1,35 @@
 <p align="center"><img src="docs/branding/sportswave-icon.png" width="112" alt="SportsWave wave and play icon"></p>
 <h1 align="center">SportsWave</h1>
 <p align="center">A native Android sports catalogue with in-app player discovery and fullscreen playback.</p>
-<p align="center"><a href="https://github.com/FediMechergui/SportsWave-Android/releases/tag/v1.0.0-beta.4">Download the beta</a> · <a href="PROVIDERS.md">Provider guide</a> · <a href="TEST_REPORT.md">Test report</a></p>
+<p align="center"><a href="https://github.com/FediMechergui/SportsWave-Android/releases/tag/v1.0.0">Download the APK</a> · <a href="PROVIDERS.md">Provider guide</a> · <a href="TEST_REPORT.md">Test report</a></p>
 
 ## Install
 
-Download **SportsWave-1.0.0-beta.4.apk** from the [GitHub release](https://github.com/FediMechergui/SportsWave-Android/releases/tag/v1.0.0-beta.4). Open it on an Android 8.0+ device and allow installation from that download source if Android asks. The APK is a signed release build, not a debug APK.
+Download **SportsWave-1.0.0.apk** from the [GitHub release](https://github.com/FediMechergui/SportsWave-Android/releases/tag/v1.0.0). Open it on an Android 8.0+ device and allow installation from that download source if Android asks. The APK is a signed release build, not a debug APK.
 
-The release also includes **SportsWave-1.0.0-beta.4.aab** for Android store distribution and **SHA256SUMS.txt** for checking downloads. An AAB is not directly installable; use the APK on your phone. This GitHub release is not a Google Play listing.
+The release also includes **SportsWave-1.0.0.aab** for Android store distribution and **SHA256SUMS.txt** for checking downloads. An AAB is not directly installable; use the APK on your phone. This GitHub release is not a Google Play listing.
 
 If you previously installed a development/debug APK with the same package name, Android cannot update it with the new release key. Remove that debug installation first; this removes its local app data. Future release APKs will use the same release-signing identity.
 
-## Current beta status
+## Calendars, scores and Arabic/English players
 
-**Beta.4 interface/data update:** compact match rows, competition priorities, date navigation, conservative fixture merging, persistent favourites, saved schedules, score freshness, SVG crests, match details and player failure feedback. See [public data coverage](docs/PUBLIC_DATA.md) and [Apify test results](docs/APIFY.md).
+ESPN's English public scoreboards and FilGoal's Arabic football cards are integrated. Selecting a calendar date fetches that date, with adjacent API dates to cover timezone boundaries; a seven-day strip and the device timezone appear above the fixtures. The default metadata sources are English or Arabic; the legacy German OpenLigaDB adapter is no longer in the source picker.
 
-**This is an experimental prerelease.** VIPRow catalogue loading and Arryadia/SNRT web playback have been verified in the signed APK on Android 15, including landscape fullscreen, and in the Android 17 debug build. This does not certify every provider or channel. Native HLS previously showed emulator corruption; KooraTV/KorahLive schedules, verified live scores and full Arabic localization remain limited. See the dated checks in the test report.
+All 19 sport tabs have local vector icons. ESPN adds selected football, basketball, American football, baseball, hockey, tennis, golf, Formula 1, UFC and rugby competitions. Other sports retain available VIPRow schedules; complete worldwide coverage is not claimed. FilGoal covers its published football fixtures. Score-only entries never become invented stream links.
+
+Player choices require explicit Arabic or English commentary metadata. Other and unknown languages are hidden, including native choices without published language metadata. An Arabic website or an English channel name alone is not proof of commentary language. This can leave a match with no eligible server.
+
+## Release coverage
+
+**1.0.0:** native left/right team scoreboards, selected English ESPN score feeds, Arabic FilGoal fixtures, Tunisian/international competition priorities, date navigation, race entrants/classifications, shared published crests and an integrated official beIN MENA TV guide. The TV guide offers date/channel/live-broadcast filters and official channel handoffs. Match-name filtering requires both team names; spelling differences can hide a broadcast.
+
+**Coverage remains source-dependent.** This release does not guarantee a server for every event, every team crest, second-by-second scores or comprehensive worldwide calendars. Unknown commentary languages stay hidden. Official watch services open in their own app/browser and can require subscriptions or regional availability. Calendar entries and guide listings are not proof of working video. Earlier verified playback is dated in the test report; YacineTV/Robotiva has no newly verified player integration.
 
 | Feature | Current behavior |
 | --- | --- |
-| Catalogue | VIPRow public event metadata and Livekora football match cards; search, refresh, status/day grouping and selectable sorting. |
+| Catalogue | VIPRow, ESPN, FilGoal and available Livekora/KorahLive metadata; date-specific calendars, search, sorting and Tunisia shortcut. |
 | Sport coverage | All 19 published VIPRow categories are configured, including the corrected MMA route. Availability varies by category and date. |
-| Live indicators | Estimated from scheduled times, **not verified live scores or match clocks**. |
+| Scores/status | Source-reported scores/status when published; other started fixtures are labelled status unverified. No invented match clocks. |
 | Player discovery | Actual published anchors, iframe src/data-src and server data attributes; bounded scans, title labels and exact URL deduplication. |
 | Web providers | TodayStreams, DaddyLive, Dembed, YasirTV, AlbaPlayer and SNRT recognition. Full published YasirTV query parameters are preserved. |
 | Web playback | Fullscreen WebView, explicit nested-provider/resource rules, popup restrictions, loading timeout, retry and back/switch-server controls. |
@@ -40,7 +48,7 @@ The app runs on the Android device without a local desktop server. VIPRow metada
 
 Web documents remain in the WebView. Only explicitly configured authorized `.m3u8` / `.mpd` manifests route to Media3. The verified dependency chain TodayStreams → DaddyLive → Dembed has explicit frame rules; unrelated navigation and advertising hosts remain restricted. HTML loading is not treated as proof of video playback.
 
-Team crests use optional TheSportsDB lookups with local caching and initials as a fallback. Current public API restrictions can limit artwork availability; see the audit before choosing a production data plan.
+Team crests use published ESPN/FilGoal images, reused across reviewed Arabic/English team identities within the same sport, with local caching and initials when artwork is missing. Optional TheSportsDB lookups require appropriate API access; universal artwork coverage is not claimed.
 
 ## Build from source
 

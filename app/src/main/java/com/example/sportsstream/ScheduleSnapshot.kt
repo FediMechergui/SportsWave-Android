@@ -16,6 +16,10 @@ object ScheduleSnapshot {
             put("homeScore", event.homeScore ?: JSONObject.NULL); put("awayScore", event.awayScore ?: JSONObject.NULL)
             put("homeLogo", event.homeLogo); put("awayLogo", event.awayLogo)
             put("receivedAt", event.receivedAt); put("status", event.status)
+            put("entrants", JSONArray(event.entrants.take(100).map { entrant -> JSONObject().apply {
+                put("name", entrant.name); put("position", entrant.position ?: JSONObject.NULL)
+                put("result", entrant.result); put("logo", entrant.logo)
+            } }))
         }
     }).toString()
     fun decode(json: String, now: Long = System.currentTimeMillis()): List<SportEvent> {
@@ -32,7 +36,11 @@ object ScheduleSnapshot {
                 row.optString("home"), row.optString("away"),
                 if (row.isNull("homeScore")) null else row.getInt("homeScore"),
                 if (row.isNull("awayScore")) null else row.getInt("awayScore"),
-                row.optString("homeLogo"), row.optString("awayLogo"), received, row.optString("status", "unknown"))
+                row.optString("homeLogo"), row.optString("awayLogo"), received, row.optString("status", "unknown"),
+                row.optJSONArray("entrants")?.let { list -> (0 until minOf(list.length(),100)).mapNotNull { i ->
+                    list.optJSONObject(i)?.let { item -> EventEntrant(item.optString("name"),
+                        if(item.isNull("position")) null else item.optInt("position").takeIf { it > 0 }, item.optString("result"), item.optString("logo")) }
+                } }.orEmpty())
         }.getOrNull() }
     }
     fun read(file: File): List<SportEvent> = runCatching {

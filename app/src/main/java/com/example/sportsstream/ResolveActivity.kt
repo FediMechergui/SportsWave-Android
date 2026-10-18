@@ -205,12 +205,15 @@ class ResolveActivity : AppCompatActivity() {
 
     private fun showPlayers(players: Map<String, Pair<ProviderRule, String>>) {
         lastPlayers = players.toMap()
-        status.text = "${players.size} published player choice(s) · playback not verified"
+        val eligible = players.filter { CommentaryLanguage.allowed(languages[it.key]) != null }
+        status.text = if(eligible.isEmpty()) "No confirmed Arabic or English commentary. Other and unknown languages are hidden."
+            else "${eligible.size} Arabic/English player choice(s); ${players.size - eligible.size} hidden. Playback not verified."
+
         choices.removeAllViews()
         addNativeChoice()
         var previousLanguage: String? = null
-        players.entries.sortedWith(compareBy({ languages[it.key] ?: "Unknown commentary language" }, { PlayerFailures.recent(this, it.key) }, { it.value.first.priority }, { it.value.second })).forEach { (url, info) ->
-            val language = languages[url] ?: "Unknown commentary language"
+        eligible.entries.sortedWith(compareBy({ CommentaryLanguage.allowed(languages[it.key]).orEmpty() }, { PlayerFailures.recent(this, it.key) }, { it.value.first.priority }, { it.value.second })).forEach { (url, info) ->
+            val language = CommentaryLanguage.allowed(languages[url]) ?: return@forEach
             if (language != previousLanguage) {
                 choices.addView(TextView(this).apply {
                     text = language; textSize = 14f; setTextColor(accent)
@@ -261,10 +264,11 @@ class ResolveActivity : AppCompatActivity() {
     }
 
     private fun addNativeChoice() {
+        val language = CommentaryLanguage.allowed(intent.getStringExtra("native_language")) ?: return
         val url = intent.getStringExtra("native_url") ?: return
         val type = intent.getStringExtra("native_type") ?: return
         val mode = when (type) { "hls" -> PlaybackMode.HLS; "dash" -> PlaybackMode.DASH; else -> return }
-        val source = PlayerSource(url, "authorized-$type", "Authorized ${type.uppercase()}", url, mode)
+        val source = PlayerSource(url, "authorized-$type", "Authorized ${type.uppercase()}", url, mode, language)
         val result = registry.adapter(source.providerId)?.resolve(source) as? PlaybackResult.Native ?: return
         choices.addView(TextView(this).apply {
             text = "▶ ${source.label} · native player"; textSize = 16f; setTextColor(Color.WHITE)

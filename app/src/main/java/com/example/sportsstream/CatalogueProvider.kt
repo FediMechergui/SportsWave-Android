@@ -8,6 +8,7 @@ import java.time.OffsetDateTime
 interface CatalogueProvider {
     val id: String
     fun load(sport: String): List<SportEvent>
+    fun load(sport: String, day: java.time.LocalDate?): List<SportEvent> = load(sport)
 }
 /** Static public metadata only; does not execute the site's scripts or infer events from channels. */
 class KorahLiveCatalogue(private val root: String = "https://q.korahlive.online/"): CatalogueProvider {

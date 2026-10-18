@@ -1,3 +1,15 @@
+# Public calendars and scores - 1.0.0 (2026-10-18)
+
+- English: ESPN public scoreboard responses, queried one date at a time. Date ranges return HTTP 400 on several sports; they are not used. Requests have bounded sizes/timeouts, three workers and a five-minute bounded memory cache. Failed date windows retain saved source data rather than replacing it with an incomplete window. Public endpoints are undocumented and may change.
+- Arabic: [FilGoal fixture pages](https://www.filgoal.com/matches?date=2026-10-18). The returned calendar date must match the request. Only main fixture cards are parsed; header sliders are excluded. Cairo local times use Africa/Cairo daylight-saving rules. On the checked date, Bournemouth/Sunderland at 16:00 on FilGoal matched ESPN's 13:00Z. This timezone interpretation is explicit, not the phone's timezone. The app displays device-local times. Cards without a published kickoff remain unavailable.
+- Parser checks against fetched primary-source data returned 100 football records, 12 NFL games, one MLB game, 324 nested ATP matches, five F1 sessions, 11 UFC bouts and 75 FilGoal fixtures. These are parser results for sampled responses, not counts of current live events. The adapter's three-day live football window returned 753 ESPN records and FilGoal's selected day returned 75. Availability changes.
+- ESPN maps actual home/away metadata and nested draw/session/bout IDs. Scheduled zero scores stay unknown. Finished/live scores are published snapshots, not certified real-time delivery. No TV listing, publisher match page or score record is converted into a player URL.
+- Player choices accept only explicit Arabic or English language metadata. Other and unknown languages are hidden. Existing reviewed player hosts remain scoped; no new streaming host was enabled.
+- All 19 tabs have bundled vectors. Google Material Design icons are Apache-2.0; license/notice files are in docs/licenses and the APK assets. Darts, billiards and racing-flag vectors are local geometric artwork.
+- Working English endpoints checked: https://site.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard?dates=20261018&limit=1000&lang=en and equivalent reviewed sport/league routes in EspnCatalogue.kt. Empty NBA/WNBA/college-football/rugby responses are valid schedules without events for that date, not proof of year-round coverage.
+
+The older OpenLigaDB adapter below remains in source for compatibility/tests but is excluded from the active picker/default aggregation to honour the English/Arabic resource selection. Older coverage details are historical.
+
 # Public sports data and source coverage
 
 Working-tree redesign, checked 14 October 2026. These changes are not in the published beta.2 APK.
@@ -46,3 +58,14 @@ Existing reviewed player families: TodayStreams, DaddyLive, Dembed, YasirTV, Alb
 Broader dependable live coverage needs an authorized data service or hosted feed. Secrets should remain on a backend, not in a publicly distributed APK. This list records investigated candidates, not every sports website on the Internet.
 
 A completed refresh replaces only the responding source's fixtures. Pending and failed sources retain their records and original retrieval times; successful empty responses clear only that source. Confirmed empty snapshots are persisted, so removed fixtures do not reappear after restarting. Disposed metadata loaders cannot update the current catalogue.
+## Official TV guide and 1.0.0 coverage
+
+The native **TV & watch** screen requests the official beIN MENA `tv-channel?region=en-mena` and `tv-event` endpoints at `www.beinsports.com/api/opta/`. Requests cover the selected device-local day using UTC boundaries, request up to 2,000 programmes, and reject truncated responses. Only reviewed MENA channel names are retained; French-labelled and unknown channels are excluded. Channel listings are Arabic/English services, not proof of a particular commentary track. Existing in-app player choices still require explicit Arabic/English commentary metadata.
+
+Programme airtimes never replace fixture kickoffs or scores. Published replay/live flags remain distinct. A match filter requires both complete team identities with reviewed aliases; it can miss spelling variants. Official channel URLs are accepted only on `beinconnect.app` or `connect.bein.com` and open with the official app/browser. Accounts, rights and subscriptions remain with the service. The app does not extract protected playback sessions.
+
+Additional official service links include Watania/Tunisia, F1 TV, NBA League Pass, Tennis TV, Racing TV, Dubai Racing, RugbyPass TV and Volleyball World TV where relevant to the selected sport. These are labelled service links, not verified event servers. YacineTV's inspected public feed returned an encoded payload; no new YacineTV or Robotiva resolver is enabled. The official Watania page also publishes an HLS manifest, but channel availability alone does not establish a match's commentary language or carriage; no inferred match server was added.
+
+ESPN motorsport uses season queries because day queries can omit meetings, then filters by the requested local window. Published entrants/classifications are retained in bounded snapshots and displayed separately from team scores. Horse-racing live timing and complete worldwide/team artwork coverage remain unavailable. Published logos can be reused only within the same sport and an exact reviewed team identity; missing crests use initials.
+
+Sources inspected on 18 October 2026: [beIN guide](https://www.beinsports.com/en-mena/tv-guide), [FilGoal calendars](https://www.filgoal.com/matches), [Watania live](https://www.tunisiatv.tn/ar/live), [YacineTV](https://yacinetv.website/). The ESPN public endpoints remain undocumented and can change independently of the app.

@@ -1,6 +1,6 @@
 # Building and publishing a release
 
-Release version: 1.0.0-beta.4, versionCode 5. Keep the package identity `com.example.sportsstream` and the same signing key when publishing updates.
+Release version: 1.0.0, versionCode 6. Keep the package identity `com.example.sportsstream` and the same signing key when publishing updates.
 
 ## Signing
 
@@ -39,6 +39,6 @@ Use SDK build-tools `apksigner verify --verbose --print-certs` and `zipalign -c 
 
 ## Publish
 
-Update versionName/versionCode, README, CHANGELOG and the actual test report. Build from the commit being tagged. Package the APK, AAB, SHA256SUMS.txt and the public signing-certificate SHA-256 fingerprint. Commit and tag the source, then create a GitHub release attaching those artifacts. Label builds prerelease while the documented playback limitations remain unresolved.
+Update versionName/versionCode, README, CHANGELOG and the actual test report. Build from the commit being tagged. Package the APK, AAB, SHA256SUMS.txt and the public signing-certificate SHA-256 fingerprint. Commit and tag the source, then create a GitHub release attaching those artifacts. The user requested the official 1.0.0 GitHub release. Its release notes must state current coverage and playback limits; stable packaging does not certify every external provider.
 
 The workflow in `.github/workflows/android.yml` runs offline tests and assembles a debug APK without release-signing credentials. Publishing this repository/release does not submit an app to Google Play. Store submission needs a separate developer account, store identity/policy work and Play signing setup.
